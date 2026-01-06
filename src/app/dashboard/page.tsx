@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Box, Container, Typography, Alert, Snackbar, Chip, Stack, IconButton, Tooltip } from "@mui/material";
 import { Shuffle as ShuffleIcon } from "@mui/icons-material";
 import Header from "@/components/Header";
@@ -8,6 +8,7 @@ import VideoPlayer from "@/components/VideoPlayer";
 import VideoList from "@/components/VideoList";
 import { Video } from "@/types/youtube";
 import { useSkippedVideos } from "@/hooks/useSkippedVideos";
+import styles from "./page.module.css";
 
 // Fisher-Yates shuffle algorithm
 function shuffleArray<T>(array: T[]): T[] {
@@ -27,12 +28,11 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
-  const { skippedVideoIds, addToSkipList, filterSkippedVideos } = useSkippedVideos();
+  const { skippedVideoIds, addToSkipList } = useSkippedVideos();
 
   const handleSearch = useCallback(async (query: string) => {
     if (!query.trim()) return;
 
-    // Split by comma and clean up each term
     const terms = query
       .split(",")
       .map((term) => term.trim())
@@ -45,14 +45,12 @@ export default function DashboardPage() {
     setError(null);
 
     try {
-      // Calculate results per term (distribute evenly, max 50 total)
       const maxTotalResults = 50;
       const resultsPerTerm = Math.min(
         Math.floor(maxTotalResults / terms.length),
         20
       );
 
-      // Fetch videos for all search terms in parallel
       const searchPromises = terms.map(async (term) => {
         const response = await fetch(
           `/api/youtube/search?q=${encodeURIComponent(term)}&maxResults=${resultsPerTerm}`
@@ -67,36 +65,28 @@ export default function DashboardPage() {
         return data.videos as Video[];
       });
 
-      // Wait for all searches to complete
       const allResults = await Promise.all(searchPromises);
-
-      // Combine all videos
       const combinedVideos = allResults.flat();
 
-      // Remove duplicates (same video ID)
       const uniqueVideos = combinedVideos.filter(
         (video, index, self) =>
           index === self.findIndex((v) => v.id === video.id)
       );
 
-      // Filter out skipped videos
       const filteredVideos = uniqueVideos.filter(
         (video) => !skippedVideoIds.includes(video.id)
       );
 
-      // Shuffle the combined results
       const shuffledVideos = shuffleArray(filteredVideos);
 
       setVideos(shuffledVideos);
 
-      // Auto-select first video from shuffled results
       if (shuffledVideos.length > 0) {
         setSelectedVideo(shuffledVideos[0]);
       } else {
         setSelectedVideo(null);
       }
 
-      // Save search to database for logged-in users
       try {
         await fetch("/api/user/search-history", {
           method: "POST",
@@ -108,7 +98,6 @@ export default function DashboardPage() {
           }),
         });
       } catch (saveError) {
-        // Don't fail the search if saving history fails
         console.error("Failed to save search history:", saveError);
       }
     } catch (err) {
@@ -125,7 +114,6 @@ export default function DashboardPage() {
     setSelectedVideo(video);
   }, []);
 
-  // Get current video index
   const currentIndex = selectedVideo 
     ? videos.findIndex((v) => v.id === selectedVideo.id) 
     : -1;
@@ -146,21 +134,17 @@ export default function DashboardPage() {
     if (videos.length > 0) {
       const reshuffled = shuffleArray(videos);
       setVideos(reshuffled);
-      // Keep the current video selected, it will now be at a different position
     }
   }, [videos]);
 
   const handleAlwaysSkip = useCallback(() => {
     if (!selectedVideo) return;
     
-    // Add to skip list
     addToSkipList(selectedVideo.id, selectedVideo.title, selectedVideo.channelName);
     
-    // Remove from current video list
     const updatedVideos = videos.filter((v) => v.id !== selectedVideo.id);
     setVideos(updatedVideos);
     
-    // Move to next video or previous if at end
     if (currentIndex < updatedVideos.length) {
       setSelectedVideo(updatedVideos[currentIndex]);
     } else if (updatedVideos.length > 0) {
@@ -181,36 +165,13 @@ export default function DashboardPage() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "background.default",
-      }}
-    >
+    <Box className={styles.pageContainer}>
       <Header onSearch={handleSearch} />
 
-      <Container
-        maxWidth={false}
-        sx={{
-          py: { xs: 1.5, sm: 2, md: 3 },
-          px: { xs: 1, sm: 2, md: 3, lg: 4 },
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            gap: { xs: 2, sm: 2, md: 3 },
-            flexDirection: { xs: "column", lg: "row" },
-          }}
-        >
+      <Container maxWidth={false} className={styles.mainContainer}>
+        <Box className={styles.contentWrapper}>
           {/* Main Video Player */}
-          <Box
-            sx={{
-              flex: 1,
-              minWidth: 0,
-              maxWidth: { lg: "calc(100% - 420px)" },
-            }}
-          >
+          <Box className={styles.playerSection}>
             <VideoPlayer 
               video={selectedVideo} 
               isLoading={isLoading && !selectedVideo}
@@ -223,21 +184,10 @@ export default function DashboardPage() {
           </Box>
 
           {/* Video List Sidebar */}
-          <Box
-            sx={{
-              width: { xs: "100%", lg: 400 },
-              flexShrink: 0,
-            }}
-          >
-            <Box sx={{ mb: { xs: 1, sm: 2 }, px: { xs: 0.5, sm: 1 } }}>
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 0.5, sm: 1 } }}>
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: { xs: "0.9rem", sm: "1rem" },
-                  }}
-                >
+          <Box className={styles.sidebarSection}>
+            <Box className={styles.sidebarHeader}>
+              <Box className={styles.sidebarTitleRow}>
+                <Typography variant="subtitle1" className={styles.sidebarTitle}>
                   {searchTerms.length > 0
                     ? `תוצאות חיפוש (${videos.length} סרטונים)`
                     : "חפש סרטונים כדי להתחיל"}
@@ -247,23 +197,15 @@ export default function DashboardPage() {
                     <IconButton
                       onClick={handleReshuffle}
                       size="small"
-                      sx={{
-                        bgcolor: "primary.main",
-                        color: "white",
-                        width: { xs: 28, sm: 32 },
-                        height: { xs: 28, sm: 32 },
-                        "&:hover": {
-                          bgcolor: "primary.dark",
-                        },
-                      }}
+                      className={styles.shuffleButton}
                     >
-                      <ShuffleIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
+                      <ShuffleIcon className={styles.shuffleIcon} />
                     </IconButton>
                   </Tooltip>
                 )}
               </Box>
               {searchTerms.length > 0 && (
-                <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                <Stack direction="row" className={styles.searchTermsContainer}>
                   {searchTerms.map((term, index) => (
                     <Chip
                       key={index}
@@ -271,25 +213,16 @@ export default function DashboardPage() {
                       size="small"
                       color="primary"
                       variant="outlined"
-                      sx={{ 
-                        mb: 0.5,
-                        height: { xs: 24, sm: 28 },
-                        "& .MuiChip-label": {
-                          fontSize: { xs: "0.7rem", sm: "0.8rem" },
-                          px: { xs: 1, sm: 1.5 },
-                        },
+                      className={styles.searchTermChip}
+                      classes={{
+                        label: styles.chipLabel,
                       }}
                     />
                   ))}
                 </Stack>
               )}
             </Box>
-            <Box
-              sx={{
-                height: { xs: "auto", lg: "calc(100vh - 180px)" },
-                maxHeight: { xs: 350, sm: 450, md: 600, lg: "none" },
-              }}
-            >
+            <Box className={styles.videoListContainer}>
               <VideoList
                 videos={videos}
                 onVideoSelect={handleVideoSelect}
@@ -308,7 +241,7 @@ export default function DashboardPage() {
         onClose={handleCloseError}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={handleCloseError} severity="error" sx={{ width: "100%" }}>
+        <Alert onClose={handleCloseError} severity="error">
           {error}
         </Alert>
       </Snackbar>
@@ -320,7 +253,7 @@ export default function DashboardPage() {
         onClose={handleCloseSuccess}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={handleCloseSuccess} severity="success" sx={{ width: "100%" }}>
+        <Alert onClose={handleCloseSuccess} severity="success">
           {successMessage}
         </Alert>
       </Snackbar>

@@ -12,8 +12,8 @@ import {
   Block as BlockIcon,
 } from "@mui/icons-material";
 import { Video, formatViewCount, formatLikeCount, formatRelativeTime } from "@/types/youtube";
+import styles from "./VideoPlayer.module.css";
 
-// Declare YouTube types
 declare global {
   interface Window {
     YT: {
@@ -62,29 +62,23 @@ export default function VideoPlayer({
   const onNextRef = useRef(onNext);
   const hasNextRef = useRef(hasNext);
 
-  // Keep refs updated
   useEffect(() => {
     onNextRef.current = onNext;
     hasNextRef.current = hasNext;
   }, [onNext, hasNext]);
 
-  // Handle video end - auto play next
   const handleStateChange = useCallback((event: { data: number }) => {
-    // State 0 = ENDED
     if (event.data === 0 && hasNextRef.current && onNextRef.current) {
-      // Small delay before playing next
       setTimeout(() => {
         onNextRef.current?.();
       }, 1000);
     }
   }, []);
 
-  // Load YouTube IFrame API and create player
   useEffect(() => {
     if (!video) return;
 
     const createPlayer = () => {
-      // Destroy existing player if any
       if (playerRef.current) {
         try {
           playerRef.current.destroy();
@@ -94,7 +88,6 @@ export default function VideoPlayer({
         playerRef.current = null;
       }
 
-      // Make sure the element exists
       const playerElement = document.getElementById("youtube-player");
       if (!playerElement) return;
 
@@ -110,9 +103,7 @@ export default function VideoPlayer({
       });
     };
 
-    // Load the IFrame Player API code asynchronously if not loaded
     if (!window.YT || !window.YT.Player) {
-      // Check if script is already being loaded
       const existingScript = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
       
       if (!existingScript) {
@@ -143,14 +134,11 @@ export default function VideoPlayer({
 
   if (isLoading) {
     return (
-      <Box sx={{ width: "100%" }}>
-        <Skeleton 
-          variant="rounded" 
-          sx={{ width: "100%", aspectRatio: "16/9", borderRadius: 2 }} 
-        />
-        <Box sx={{ mt: 2 }}>
+      <Box className={styles.skeletonWrapper}>
+        <Skeleton variant="rounded" className={styles.playerSkeleton} />
+        <Box className={styles.infoSkeleton}>
           <Skeleton variant="text" width="80%" height={32} />
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mt: 2 }}>
+          <Box className={styles.channelSkeleton}>
             <Skeleton variant="circular" width={40} height={40} />
             <Box>
               <Skeleton variant="text" width={120} />
@@ -164,163 +152,66 @@ export default function VideoPlayer({
 
   if (!video) {
     return (
-      <Box
-        sx={{
-          width: "100%",
-          aspectRatio: "16/9",
-          bgcolor: "grey.900",
-          borderRadius: 2,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Typography color="grey.500">חפש סרטונים כדי להתחיל לצפות</Typography>
+      <Box className={styles.emptyState}>
+        <Typography className={styles.emptyText}>חפש סרטונים כדי להתחיל לצפות</Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box className={styles.container}>
       {/* YouTube Player */}
-      <Box
-        sx={{
-          width: "100%",
-          aspectRatio: "16/9",
-          bgcolor: "black",
-          borderRadius: 2,
-          overflow: "hidden",
-          position: "relative",
-        }}
-      >
-        <div 
-          id="youtube-player"
-          style={{
-            width: "100%",
-            height: "100%",
-          }}
-        />
+      <Box className={styles.playerWrapper}>
+        <div id="youtube-player" className={styles.player} />
       </Box>
 
       {/* Navigation Buttons */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: { xs: 1, sm: 2 },
-          mt: { xs: 1.5, sm: 2 },
-          mb: 1,
-          flexWrap: "wrap",
-        }}
-      >
+      <Box className={styles.navigationButtons}>
         <Button
           variant="contained"
-          startIcon={<SkipPreviousIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />}
+          startIcon={<SkipPreviousIcon className={styles.navIcon} />}
           onClick={onPrevious}
           disabled={!hasPrevious}
-          sx={{
-            borderRadius: "24px",
-            px: { xs: 2, sm: 3 },
-            py: { xs: 0.75, sm: 1 },
-            textTransform: "none",
-            fontWeight: 600,
-            fontSize: { xs: "0.8rem", sm: "0.875rem" },
-            bgcolor: "grey.800",
-            minWidth: { xs: "auto", sm: 100 },
-            "&:hover": {
-              bgcolor: "grey.900",
-            },
-            "&:disabled": {
-              bgcolor: "grey.300",
-              color: "grey.500",
-            },
-          }}
+          className={styles.navButtonPrev}
         >
           הקודם
         </Button>
         
         <Button
           variant="contained"
-          startIcon={<BlockIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />}
+          startIcon={<BlockIcon className={styles.navIcon} />}
           onClick={onAlwaysSkip}
-          sx={{
-            borderRadius: "24px",
-            px: { xs: 2, sm: 3 },
-            py: { xs: 0.75, sm: 1 },
-            textTransform: "none",
-            fontWeight: 600,
-            fontSize: { xs: "0.8rem", sm: "0.875rem" },
-            bgcolor: "error.main",
-            minWidth: { xs: "auto", sm: 100 },
-            "&:hover": {
-              bgcolor: "error.dark",
-            },
-          }}
+          className={styles.navButtonSkip}
         >
           דלג תמיד
         </Button>
         
         <Button
           variant="contained"
-          endIcon={<SkipNextIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />}
+          endIcon={<SkipNextIcon className={styles.navIcon} />}
           onClick={onNext}
           disabled={!hasNext}
-          sx={{
-            borderRadius: "24px",
-            px: { xs: 2, sm: 3 },
-            py: { xs: 0.75, sm: 1 },
-            textTransform: "none",
-            fontWeight: 600,
-            fontSize: { xs: "0.8rem", sm: "0.875rem" },
-            bgcolor: "primary.main",
-            minWidth: { xs: "auto", sm: 100 },
-            "&:hover": {
-              bgcolor: "primary.dark",
-            },
-            "&:disabled": {
-              bgcolor: "grey.300",
-              color: "grey.500",
-            },
-          }}
+          className={styles.navButtonNext}
         >
           הבא
         </Button>
       </Box>
 
       {/* Video Info */}
-      <Box sx={{ mt: 1 }}>
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: 600,
-            lineHeight: 1.3,
-            mb: 1,
-            fontSize: { xs: "1rem", sm: "1.25rem" },
-          }}
-        >
+      <Box className={styles.videoInfo}>
+        <Typography variant="h6" className={styles.videoTitle}>
           {video.title}
         </Typography>
 
         {/* Actions Row */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            flexDirection: { xs: "column", md: "row" },
-            gap: { xs: 1.5, sm: 2 },
-          }}
-        >
+        <Box className={styles.actionsRow}>
           {/* Channel Info */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 1.5 }, flexWrap: "wrap" }}>
-            <Avatar
-              sx={{ width: { xs: 32, sm: 40 }, height: { xs: 32, sm: 40 }, bgcolor: "primary.main", fontSize: { xs: "0.875rem", sm: "1rem" } }}
-            >
+          <Box className={styles.channelInfo}>
+            <Avatar className={styles.channelAvatar}>
               {video.channelName.charAt(0)}
             </Avatar>
             <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>
+              <Typography variant="subtitle2" className={styles.channelName}>
                 {video.channelName}
               </Typography>
             </Box>
@@ -329,66 +220,33 @@ export default function VideoPlayer({
               href={`https://www.youtube.com/channel/${video.channelId}?sub_confirmation=1`}
               target="_blank"
               size="small"
-              sx={{
-                borderRadius: "20px",
-                px: { xs: 1.5, sm: 2.5 },
-                ml: { xs: 0, sm: 1 },
-                textTransform: "none",
-                fontWeight: 600,
-                fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              }}
+              className={styles.subscribeButton}
             >
               הרשמה
             </Button>
           </Box>
 
           {/* Action Buttons */}
-          <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ gap: { xs: 0.5, sm: 1 } }}>
-            <Box
-              sx={{
-                display: "flex",
-                bgcolor: "grey.100",
-                borderRadius: "20px",
-                overflow: "hidden",
-              }}
-            >
+          <Stack direction="row" className={styles.actionButtons}>
+            <Box className={styles.likeDislikeGroup}>
               <Button
-                startIcon={<ThumbUpIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />}
-                sx={{
-                  borderRadius: "20px 0 0 20px",
-                  px: { xs: 1, sm: 2 },
-                  py: { xs: 0.5, sm: 0.75 },
-                  textTransform: "none",
-                  color: "text.primary",
-                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                  minWidth: "auto",
-                  "&:hover": { bgcolor: "grey.200" },
-                }}
+                startIcon={<ThumbUpIcon className={styles.actionIcon} />}
+                className={styles.likeButton}
               >
                 {formatLikeCount(video.likeCount)}
               </Button>
               <Divider orientation="vertical" flexItem />
-              <IconButton sx={{ px: { xs: 1, sm: 1.5 } }} size="small">
-                <ThumbDownIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
+              <IconButton className={styles.dislikeButton} size="small">
+                <ThumbDownIcon className={styles.actionIcon} />
               </IconButton>
             </Box>
 
             <Button
-              startIcon={<ShareIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />}
+              startIcon={<ShareIcon className={styles.actionIcon} />}
               onClick={() => {
                 navigator.clipboard.writeText(`https://www.youtube.com/watch?v=${video.id}`);
               }}
-              sx={{
-                bgcolor: "grey.100",
-                borderRadius: "20px",
-                px: { xs: 1.5, sm: 2 },
-                py: { xs: 0.5, sm: 0.75 },
-                textTransform: "none",
-                color: "text.primary",
-                fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                minWidth: "auto",
-                "&:hover": { bgcolor: "grey.200" },
-              }}
+              className={styles.shareButton}
             >
               שיתוף
             </Button>
@@ -397,40 +255,19 @@ export default function VideoPlayer({
               href={`https://www.youtube.com/watch?v=${video.id}`}
               target="_blank"
               size="small"
-              sx={{
-                bgcolor: "grey.100",
-                "&:hover": { bgcolor: "grey.200" },
-              }}
+              className={styles.moreButton}
             >
-              <MoreHorizIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />
+              <MoreHorizIcon className={styles.moreIcon} />
             </IconButton>
           </Stack>
         </Box>
 
         {/* Description */}
-        <Box
-          sx={{
-            mt: { xs: 1.5, sm: 2 },
-            p: { xs: 1.5, sm: 2 },
-            bgcolor: "grey.100",
-            borderRadius: 2,
-          }}
-        >
-          <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5, fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>
+        <Box className={styles.descriptionBox}>
+          <Typography variant="body2" className={styles.videoStats}>
             {formatViewCount(video.viewCount)} • {formatRelativeTime(video.publishedAt)}
           </Typography>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              display: "-webkit-box",
-              WebkitLineClamp: { xs: 2, sm: 3 },
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-              whiteSpace: "pre-wrap",
-              fontSize: { xs: "0.8rem", sm: "0.875rem" },
-            }}
-          >
+          <Typography variant="body2" className={styles.description}>
             {video.description || "אין תיאור זמין"}
           </Typography>
         </Box>

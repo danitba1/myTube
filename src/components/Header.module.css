@@ -1,0 +1,167 @@
+/* Header Component Styles */
+
+.appBar {
+  position: sticky;
+  top: 0;
+  background-color: var(--color-background-paper);
+  border-bottom: 1px solid var(--color-divider);
+  z-index: var(--z-sticky);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  min-height: 56px;
+  padding-inline: var(--spacing-sm);
+}
+
+@media (min-width: 600px) {
+  .toolbar {
+    gap: var(--spacing-md);
+    min-height: 64px;
+    padding-inline: var(--spacing-md);
+  }
+}
+
+/* Left Section - Logo */
+.logoSection {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+@media (min-width: 600px) {
+  .logoSection {
+    gap: var(--spacing-sm);
+  }
+}
+
+.logoWrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.logoIcon {
+  color: var(--color-error);
+  font-size: 28px;
+}
+
+@media (min-width: 600px) {
+  .logoIcon {
+    font-size: 32px;
+  }
+}
+
+.logoText {
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.5px;
+  font-size: var(--font-size-md);
+}
+
+@media (min-width: 600px) {
+  .logoText {
+    font-size: var(--font-size-lg);
+  }
+}
+
+.logoTextHidden {
+  display: none;
+}
+
+@media (min-width: 600px) {
+  .logoTextHidden {
+    display: block;
+  }
+}
+
+/* Center Section - Search */
+.searchSection {
+  flex: 1;
+  display: none;
+  justify-content: center;
+  max-width: 700px;
+  margin-inline: var(--spacing-md);
+}
+
+@media (min-width: 600px) {
+  .searchSection {
+    display: flex;
+  }
+}
+
+/* Right Section - Actions */
+.actionsSection {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+@media (min-width: 600px) {
+  .actionsSection {
+    gap: var(--spacing-sm);
+  }
+}
+
+.iconButton {
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-full);
+  color: var(--color-text-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast);
+}
+
+.iconButton:hover {
+  background-color: var(--color-grey-100);
+}
+
+.mobileSearchToggle {
+  composes: iconButton;
+}
+
+@media (min-width: 600px) {
+  .mobileSearchToggle {
+    display: none;
+  }
+}
+
+.desktopOnly {
+  display: none;
+}
+
+@media (min-width: 600px) {
+  .desktopOnly {
+    display: flex;
+  }
+}
+
+@media (min-width: 900px) {
+  .mdDesktopOnly {
+    display: flex;
+  }
+}
+
+.mdDesktopOnly {
+  display: none;
+}
+
+/* Mobile Search Collapse */
+.mobileSearchWrapper {
+  padding: 0 var(--spacing-md) var(--spacing-md);
+}
+
+@media (min-width: 600px) {
+  .mobileSearchCollapse {
+    display: none;
+  }
+}
+

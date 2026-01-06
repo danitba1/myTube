@@ -1,0 +1,233 @@
+/* SearchBox Component Styles */
+
+.container {
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 600px) {
+  .container {
+    max-width: 600px;
+  }
+}
+
+.searchWrapper {
+  display: flex;
+  align-items: center;
+  border-radius: 20px;
+  border: 1px solid var(--color-divider);
+  background-color: var(--color-background-paper);
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+@media (min-width: 600px) {
+  .searchWrapper {
+    border-radius: var(--radius-lg);
+  }
+}
+
+.searchWrapper:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px rgba(25, 118, 210, 0.2);
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 10px 12px;
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+  direction: rtl;
+  min-width: 0;
+  color: var(--color-text-primary);
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.clearButton {
+  margin-inline-end: var(--spacing-xs);
+  padding: var(--spacing-xs);
+  color: var(--color-text-secondary);
+}
+
+@media (min-width: 600px) {
+  .clearButton {
+    padding: var(--spacing-sm);
+  }
+}
+
+.clearIcon {
+  font-size: 18px;
+}
+
+@media (min-width: 600px) {
+  .clearIcon {
+    font-size: 20px;
+  }
+}
+
+.searchButton {
+  background-color: var(--color-grey-100);
+  border-radius: 0;
+  padding: var(--spacing-sm) 12px;
+  border-inline-start: 1px solid var(--color-divider);
+  color: var(--color-text-primary);
+  transition: background-color var(--transition-fast);
+}
+
+@media (min-width: 600px) {
+  .searchButton {
+    padding: 10px var(--spacing-md);
+  }
+}
+
+.searchButton:hover {
+  background-color: var(--color-grey-200);
+}
+
+.searchIcon {
+  font-size: 20px;
+}
+
+@media (min-width: 600px) {
+  .searchIcon {
+    font-size: 24px;
+  }
+}
+
+/* Search History Section */
+.historyLoading {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.historyContainer {
+  margin-top: var(--spacing-sm);
+  padding-inline: var(--spacing-xs);
+}
+
+@media (min-width: 600px) {
+  .historyContainer {
+    padding-inline: var(--spacing-sm);
+  }
+}
+
+.historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.historyTitleWrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.historyIcon {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+@media (min-width: 600px) {
+  .historyIcon {
+    font-size: 16px;
+  }
+}
+
+.historyTitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+@media (min-width: 600px) {
+  .historyTitle {
+    font-size: 0.75rem;
+  }
+}
+
+.clearAllButton {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+@media (min-width: 600px) {
+  .clearAllButton {
+    font-size: 0.75rem;
+  }
+}
+
+.clearAllButton:hover {
+  text-decoration: underline;
+}
+
+.historyChips {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+@media (min-width: 600px) {
+  .historyChips {
+    gap: 6px;
+  }
+}
+
+.historyChip {
+  background-color: var(--color-grey-100);
+  border: 1px solid var(--color-grey-200);
+  transition: all var(--transition-base);
+  cursor: pointer;
+  height: 24px;
+}
+
+@media (min-width: 600px) {
+  .historyChip {
+    height: 28px;
+  }
+}
+
+.historyChip:hover {
+  background-color: var(--color-grey-200);
+  border-color: var(--color-primary);
+}
+
+.chipLabel {
+  padding-inline: 6px;
+  font-size: var(--font-size-xs);
+}
+
+@media (min-width: 600px) {
+  .chipLabel {
+    padding-inline: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+  }
+}
+
+.chipDeleteIcon {
+  font-size: 12px;
+  color: var(--color-grey-500);
+}
+
+@media (min-width: 600px) {
+  .chipDeleteIcon {
+    font-size: 14px;
+  }
+}
+
+.chipDeleteIcon:hover {
+  color: var(--color-error);
+}
+
