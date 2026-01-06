@@ -1,0 +1,294 @@
+# MyTube Project Cursor Rules
+
+## Code Style & Architecture
+
+### Separation of Concerns - CSS/Styling
+
+**CRITICAL: All styling must be separated from component logic.**
+
+1. **Never use inline `sx` props or inline styles in TSX files**
+   - ❌ BAD: `<Box sx={{ display: 'flex', gap: 2, p: 3 }}>`
+   - ❌ BAD: `<div style={{ color: 'red' }}>`
+   - ✅ GOOD: `<Box className={styles.container}>`
+
+2. **Use CSS Modules for component-specific styles**
+   - Create a `.module.css` file for each component
+   - File naming: `ComponentName.module.css` alongside `ComponentName.tsx`
+   - Example structure:
+     ```
+     components/
+       Header/
+         Header.tsx
+         Header.module.css
+         index.ts
+     ```
+
+3. **CSS Module naming conventions**
+   - Use camelCase for class names: `.containerWrapper`, `.searchButton`
+   - Use BEM-like naming for nested elements: `.card`, `.cardHeader`, `.cardBody`
+   - Prefix state classes: `.isActive`, `.isDisabled`, `.hasError`
+
+4. **Responsive design in CSS**
+   - Use CSS media queries instead of MUI's responsive object syntax
+   - Define breakpoints as CSS custom properties in `globals.css`
+   - Example:
+     ```css
+     .button {
+       padding: 8px 16px;
+       font-size: 0.875rem;
+     }
+     
+     @media (min-width: 600px) {
+       .button {
+         padding: 12px 24px;
+         font-size: 1rem;
+       }
+     }
+     ```
+
+5. **Global styles and theming**
+   - Define CSS custom properties (variables) in `globals.css`
+   - Use variables for colors, spacing, typography, shadows
+   - Example:
+     ```css
+     :root {
+       --color-primary: #1976d2;
+       --color-error: #d32f2f;
+       --spacing-xs: 4px;
+       --spacing-sm: 8px;
+       --spacing-md: 16px;
+       --spacing-lg: 24px;
+       --border-radius-sm: 4px;
+       --border-radius-md: 8px;
+       --border-radius-full: 9999px;
+     }
+     ```
+
+### Component Structure
+
+1. **Component file organization**
+   ```tsx
+   // 1. Imports (React, libraries, types, styles)
+   import { useState } from 'react';
+   import { Box, Button } from '@mui/material';
+   import styles from './ComponentName.module.css';
+   
+   // 2. Types/Interfaces
+   interface ComponentProps {
+     title: string;
+     onAction: () => void;
+   }
+   
+   // 3. Component function
+   export default function ComponentName({ title, onAction }: ComponentProps) {
+     // 4. Hooks
+     const [state, setState] = useState(false);
+     
+     // 5. Handlers
+     const handleClick = () => {
+       onAction();
+     };
+     
+     // 6. Render
+     return (
+       <div className={styles.container}>
+         <h1 className={styles.title}>{title}</h1>
+         <Button className={styles.actionButton} onClick={handleClick}>
+           Action
+         </Button>
+       </div>
+     );
+   }
+   ```
+
+2. **Conditional class names**
+   - Use template literals or clsx library for conditional classes
+   - Example:
+     ```tsx
+     import clsx from 'clsx';
+     
+     <div className={clsx(styles.item, isActive && styles.isActive)} />
+     ```
+
+### MUI Integration with CSS Modules
+
+1. **MUI components with custom styles**
+   - Apply CSS Module classes via `className` prop
+   - Override MUI styles using CSS specificity or `!important` sparingly
+   - Example:
+     ```tsx
+     <Button className={styles.primaryButton}>Click</Button>
+     ```
+     ```css
+     .primaryButton {
+       border-radius: var(--border-radius-full);
+       text-transform: none;
+       font-weight: 600;
+     }
+     ```
+
+2. **Avoid MUI's `sx` prop entirely**
+   - All MUI component styling should be in CSS files
+   - Use CSS custom properties for theme values
+
+### File Naming Conventions
+
+- Components: `PascalCase.tsx` (e.g., `VideoPlayer.tsx`)
+- CSS Modules: `PascalCase.module.css` (e.g., `VideoPlayer.module.css`)
+- Hooks: `camelCase.ts` with `use` prefix (e.g., `useSearchHistory.ts`)
+- Utilities: `camelCase.ts` (e.g., `formatters.ts`)
+- Types: `camelCase.ts` or in component file (e.g., `youtube.ts`)
+
+### Best Practices
+
+1. **Single Responsibility**
+   - Each component should do one thing well
+   - Extract complex logic into custom hooks
+   - Extract complex UI into sub-components
+
+2. **Keep components small**
+   - If a component exceeds 150 lines, consider splitting it
+   - Extract repeated patterns into reusable components
+
+3. **Props naming**
+   - Use descriptive names: `onVideoSelect` not `onSelect`
+   - Boolean props: `isLoading`, `hasError`, `canSubmit`
+   - Handler props: prefix with `on` (e.g., `onClick`, `onSearch`)
+
+4. **Accessibility**
+   - Always include proper ARIA labels
+   - Ensure keyboard navigation works
+   - Use semantic HTML elements
+
+5. **Performance**
+   - Use `useCallback` for handlers passed to child components
+   - Use `useMemo` for expensive computations
+   - Avoid creating objects/arrays in render
+
+### CSS Best Practices
+
+1. **Mobile-first responsive design**
+   - Write base styles for mobile
+   - Add media queries for larger screens
+   
+2. **Use CSS custom properties**
+   - Define all colors, spacing, and sizes as variables
+   - Makes theming and maintenance easier
+
+3. **Avoid deep nesting**
+   - Maximum 3 levels of nesting
+   - Use flat class structures when possible
+
+4. **Organize CSS properties**
+   ```css
+   .element {
+     /* Positioning */
+     position: relative;
+     top: 0;
+     
+     /* Box Model */
+     display: flex;
+     width: 100%;
+     padding: var(--spacing-md);
+     margin: 0;
+     
+     /* Typography */
+     font-size: 1rem;
+     font-weight: 600;
+     color: var(--color-text);
+     
+     /* Visual */
+     background-color: var(--color-background);
+     border: 1px solid var(--color-border);
+     border-radius: var(--border-radius-md);
+     
+     /* Misc */
+     cursor: pointer;
+     transition: all 0.2s ease;
+   }
+   ```
+
+### RTL Support (Hebrew)
+
+1. **Use logical properties**
+   - `margin-inline-start` instead of `margin-left`
+   - `padding-inline-end` instead of `padding-right`
+   - `inset-inline-start` instead of `left`
+
+2. **Use CSS `direction` property**
+   - Set `direction: rtl` on container elements
+   - Use `text-align: start` instead of specific directions
+
+### Example Migration
+
+**Before (inline styles - BAD):**
+```tsx
+<Box sx={{ display: 'flex', gap: 2, p: { xs: 1, sm: 2 } }}>
+  <Button sx={{ borderRadius: '20px', px: 3 }}>Click</Button>
+</Box>
+```
+
+**After (CSS Module - GOOD):**
+```tsx
+// Component.tsx
+<div className={styles.container}>
+  <Button className={styles.actionButton}>Click</Button>
+</div>
+```
+
+```css
+/* Component.module.css */
+.container {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm);
+}
+
+@media (min-width: 600px) {
+  .container {
+    padding: var(--spacing-md);
+  }
+}
+
+.actionButton {
+  border-radius: var(--border-radius-full);
+  padding-inline: var(--spacing-lg);
+}
+```
+
+## Technology Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **UI Library**: MUI (Material-UI) v7
+- **Styling**: CSS Modules + CSS Custom Properties
+- **Auth**: Clerk
+- **Database**: Neon PostgreSQL with Drizzle ORM
+- **Language**: TypeScript (strict mode)
+
+## Project Structure
+
+```
+src/
+  app/                    # Next.js App Router pages
+    page.tsx
+    page.module.css
+    layout.tsx
+    globals.css
+    dashboard/
+      page.tsx
+      page.module.css
+  components/             # Reusable components
+    Header/
+      Header.tsx
+      Header.module.css
+      index.ts
+    VideoPlayer/
+      VideoPlayer.tsx
+      VideoPlayer.module.css
+      index.ts
+  hooks/                  # Custom React hooks
+  db/                     # Database schema and queries
+  types/                  # TypeScript type definitions
+  lib/                    # Utility functions
+```
+
