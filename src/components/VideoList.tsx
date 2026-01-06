@@ -44,10 +44,10 @@ export default function VideoList({ videos, onVideoSelect, currentVideoId, isLoa
         height: "100%",
         overflowY: "scroll",
         overflowX: "hidden",
-        pr: 1,
+        pr: { xs: 0.5, sm: 1 },
         // Custom scrollbar styling
         "&::-webkit-scrollbar": {
-          width: "10px",
+          width: { xs: "6px", sm: "10px" },
         },
         "&::-webkit-scrollbar-track": {
           bgcolor: "grey.200",
@@ -67,7 +67,7 @@ export default function VideoList({ videos, onVideoSelect, currentVideoId, isLoa
         scrollbarColor: "#9e9e9e #e0e0e0",
       }}
     >
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 0.5, sm: 0.5 } }}>
         {videos.map((video, index) => {
           const isSelected = currentVideoId === video.id;
           return (
@@ -77,8 +77,8 @@ export default function VideoList({ videos, onVideoSelect, currentVideoId, isLoa
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 1,
-                p: 1.5,
+                gap: { xs: 0.75, sm: 1 },
+                p: { xs: 1, sm: 1.5 },
                 borderRadius: 1,
                 cursor: "pointer",
                 bgcolor: isSelected ? "primary.main" : "grey.50",
@@ -95,20 +95,20 @@ export default function VideoList({ videos, onVideoSelect, currentVideoId, isLoa
               {/* Index number */}
               <Typography
                 sx={{
-                  minWidth: 28,
-                  height: 28,
+                  minWidth: { xs: 24, sm: 28 },
+                  height: { xs: 24, sm: 28 },
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   borderRadius: "50%",
                   bgcolor: isSelected ? "primary.dark" : "grey.200",
                   color: isSelected ? "primary.contrastText" : "text.secondary",
-                  fontSize: "0.75rem",
+                  fontSize: { xs: "0.65rem", sm: "0.75rem" },
                   fontWeight: 600,
                   flexShrink: 0,
                 }}
               >
-                {isSelected ? <PlayArrowIcon sx={{ fontSize: 16 }} /> : index + 1}
+                {isSelected ? <PlayArrowIcon sx={{ fontSize: { xs: 14, sm: 16 } }} /> : index + 1}
               </Typography>
 
               {/* Video title */}
@@ -118,6 +118,7 @@ export default function VideoList({ videos, onVideoSelect, currentVideoId, isLoa
                   flex: 1,
                   fontWeight: isSelected ? 600 : 400,
                   lineHeight: 1.4,
+                  fontSize: { xs: "0.8rem", sm: "0.875rem" },
                   // Allow text to wrap for readability
                   wordBreak: "break-word",
                   overflow: "hidden",

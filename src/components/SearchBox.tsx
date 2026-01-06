@@ -73,13 +73,13 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
   };
 
   return (
-    <Box sx={{ width: "100%", maxWidth: 600 }}>
+    <Box sx={{ width: "100%", maxWidth: { xs: "100%", sm: 600 } }}>
       <Paper
         elevation={0}
         sx={{
           display: "flex",
           alignItems: "center",
-          borderRadius: "24px",
+          borderRadius: { xs: "20px", sm: "24px" },
           border: "1px solid",
           borderColor: "divider",
           bgcolor: "background.paper",
@@ -96,25 +96,26 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="חפש סרטונים (הפרד עם פסיק לחיפוש מרובה)..."
+          placeholder="חפש סרטונים..."
           style={{
             flex: 1,
             border: "none",
             outline: "none",
             background: "transparent",
-            padding: "12px 16px",
-            fontSize: "1rem",
+            padding: "10px 12px",
+            fontSize: "0.9rem",
             fontFamily: "inherit",
             direction: "rtl",
+            minWidth: 0,
           }}
         />
         {query && (
           <IconButton
             size="small"
             onClick={handleClear}
-            sx={{ mr: 0.5 }}
+            sx={{ mr: 0.5, p: { xs: 0.5, sm: 1 } }}
           >
-            <ClearIcon fontSize="small" />
+            <ClearIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
           </IconButton>
         )}
         <IconButton
@@ -122,8 +123,8 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
           sx={{
             bgcolor: "grey.100",
             borderRadius: 0,
-            px: 2,
-            py: 1.25,
+            px: { xs: 1.5, sm: 2 },
+            py: { xs: 1, sm: 1.25 },
             borderRight: "1px solid",
             borderColor: "divider",
             "&:hover": {
@@ -131,28 +132,28 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
             },
           }}
         >
-          <SearchIcon />
+          <SearchIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
         </IconButton>
       </Paper>
 
       {/* Search History */}
       {isHistoryLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-          <CircularProgress size={20} />
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 1.5 }}>
+          <CircularProgress size={18} />
         </Box>
       ) : searchHistory.length > 0 && (
-        <Box sx={{ mt: 1.5, px: 1 }}>
+        <Box sx={{ mt: 1, px: { xs: 0.5, sm: 1 } }}>
           <Box 
             sx={{ 
               display: "flex", 
               alignItems: "center", 
               justifyContent: "space-between",
-              mb: 1,
+              mb: 0.75,
             }}
           >
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <HistoryIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-              <Typography variant="caption" color="text.secondary">
+              <HistoryIcon sx={{ fontSize: { xs: 14, sm: 16 }, color: "text.secondary" }} />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }}>
                 חיפושים אחרונים
               </Typography>
             </Box>
@@ -161,6 +162,7 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
               color="primary"
               sx={{ 
                 cursor: "pointer",
+                fontSize: { xs: "0.7rem", sm: "0.75rem" },
                 "&:hover": { textDecoration: "underline" },
               }}
               onClick={clearHistory}
@@ -170,10 +172,10 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
           </Box>
           <Stack 
             direction="row" 
-            spacing={0.75} 
+            spacing={0.5} 
             flexWrap="wrap" 
             useFlexGap
-            sx={{ gap: 0.75 }}
+            sx={{ gap: { xs: 0.5, sm: 0.75 } }}
           >
             {searchHistory.map((item, index) => (
               <Chip
@@ -182,20 +184,21 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
                 size="small"
                 onClick={() => handleHistoryClick(item)}
                 onDelete={() => removeFromHistory(item)}
-                deleteIcon={<CloseIcon sx={{ fontSize: "14px !important" }} />}
+                deleteIcon={<CloseIcon sx={{ fontSize: { xs: "12px !important", sm: "14px !important" } }} />}
                 sx={{
                   bgcolor: "grey.100",
                   border: "1px solid",
                   borderColor: "grey.200",
                   transition: "all 0.2s ease",
                   cursor: "pointer",
+                  height: { xs: 24, sm: 28 },
                   "&:hover": {
                     bgcolor: "grey.200",
                     borderColor: "primary.main",
                   },
                   "& .MuiChip-label": {
-                    px: 1,
-                    fontSize: "0.8rem",
+                    px: { xs: 0.75, sm: 1 },
+                    fontSize: { xs: "0.7rem", sm: "0.8rem" },
                   },
                   "& .MuiChip-deleteIcon": {
                     color: "grey.500",

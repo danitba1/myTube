@@ -1,12 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
-import { AppBar, Toolbar, Box, IconButton, Avatar, Badge, Typography, Skeleton } from "@mui/material";
+import { AppBar, Toolbar, Box, IconButton, Badge, Typography, Skeleton, Collapse } from "@mui/material";
 import {
   Menu as MenuIcon,
   VideoCall as VideoCallIcon,
   Notifications as NotificationsIcon,
   VideoLibrary as VideoLibraryIcon,
+  Search as SearchIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import { UserButton } from "@clerk/nextjs";
 
@@ -28,6 +31,8 @@ interface HeaderProps {
 }
 
 export default function Header({ onSearch }: HeaderProps) {
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+
   return (
     <AppBar
       position="sticky"
@@ -38,20 +43,26 @@ export default function Header({ onSearch }: HeaderProps) {
         borderColor: "divider",
       }}
     >
-      <Toolbar sx={{ gap: 2, justifyContent: "space-between" }}>
+      <Toolbar 
+        sx={{ 
+          gap: { xs: 1, sm: 2 }, 
+          justifyContent: "space-between",
+          minHeight: { xs: 56, sm: 64 },
+          px: { xs: 1, sm: 2 },
+        }}
+      >
         {/* Left Section - Logo */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <IconButton edge="start" sx={{ display: { xs: "flex", md: "none" } }}>
-            <MenuIcon />
-          </IconButton>
+        <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, flexShrink: 0 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <VideoLibraryIcon sx={{ color: "error.main", fontSize: 32 }} />
+            <VideoLibraryIcon sx={{ color: "error.main", fontSize: { xs: 28, sm: 32 } }} />
             <Typography
               variant="h6"
               sx={{
                 fontWeight: 700,
                 color: "text.primary",
                 letterSpacing: "-0.5px",
+                fontSize: { xs: "1rem", sm: "1.25rem" },
+                display: { xs: mobileSearchOpen ? "none" : "block", sm: "block" },
               }}
             >
               MyTube
@@ -59,28 +70,36 @@ export default function Header({ onSearch }: HeaderProps) {
           </Box>
         </Box>
 
-        {/* Center Section - Search */}
+        {/* Center Section - Search (Desktop) */}
         <Box
           sx={{
             flex: 1,
-            display: "flex",
+            display: { xs: "none", sm: "flex" },
             justifyContent: "center",
             maxWidth: 700,
+            mx: 2,
           }}
         >
           <SearchBox onSearch={onSearch} />
         </Box>
 
         {/* Right Section - Actions */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, flexShrink: 0 }}>
+          {/* Mobile Search Toggle */}
+          <IconButton
+            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+            sx={{ display: { xs: "flex", sm: "none" } }}
+          >
+            {mobileSearchOpen ? <CloseIcon /> : <SearchIcon />}
+          </IconButton>
           <IconButton
             sx={{
-              display: { xs: "none", sm: "flex" },
+              display: { xs: "none", md: "flex" },
             }}
           >
             <VideoCallIcon />
           </IconButton>
-          <IconButton>
+          <IconButton sx={{ display: { xs: "none", sm: "flex" } }}>
             <Badge badgeContent={3} color="error">
               <NotificationsIcon />
             </Badge>
@@ -97,6 +116,16 @@ export default function Header({ onSearch }: HeaderProps) {
           />
         </Box>
       </Toolbar>
+
+      {/* Mobile Search - Collapsible */}
+      <Collapse in={mobileSearchOpen} sx={{ display: { xs: "block", sm: "none" } }}>
+        <Box sx={{ px: 2, pb: 2 }}>
+          <SearchBox onSearch={(query) => {
+            onSearch?.(query);
+            setMobileSearchOpen(false);
+          }} />
+        </Box>
+      </Collapse>
     </AppBar>
   );
 }

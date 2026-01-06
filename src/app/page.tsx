@@ -21,17 +21,20 @@ export default function Home() {
           display: 'flex',
           justifyContent: 'flex-end',
           alignItems: 'center',
-          p: 2,
-          gap: 2,
+          p: { xs: 1.5, sm: 2 },
+          gap: { xs: 1, sm: 2 },
         }}
       >
         <SignedOut>
           <SignInButton mode="modal">
             <Button
               variant="outlined"
+              size="small"
               sx={{
                 color: 'white',
                 borderColor: 'rgba(255,255,255,0.5)',
+                fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                px: { xs: 1.5, sm: 2 },
                 '&:hover': {
                   borderColor: 'white',
                   bgcolor: 'rgba(255,255,255,0.1)',
@@ -44,9 +47,12 @@ export default function Home() {
           <SignUpButton mode="modal">
             <Button
               variant="contained"
+              size="small"
               sx={{
                 bgcolor: 'white',
                 color: 'primary.main',
+                fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                px: { xs: 1.5, sm: 2 },
                 '&:hover': {
                   bgcolor: 'rgba(255,255,255,0.9)',
                 },
@@ -61,9 +67,12 @@ export default function Home() {
             component={Link}
             href="/dashboard"
             variant="contained"
+            size="small"
             sx={{
               bgcolor: 'white',
               color: 'primary.main',
+              fontSize: { xs: '0.8rem', sm: '0.875rem' },
+              px: { xs: 1.5, sm: 2 },
               '&:hover': {
                 bgcolor: 'rgba(255,255,255,0.9)',
               },
@@ -82,22 +91,24 @@ export default function Home() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          px: { xs: 2, sm: 3 },
+          py: { xs: 2, sm: 4 },
         }}
       >
-        <Container maxWidth="md">
+        <Container maxWidth="md" sx={{ px: { xs: 0, sm: 2 } }}>
           <Paper
             elevation={8}
             sx={{
-              p: 6,
+              p: { xs: 3, sm: 4, md: 6 },
               textAlign: 'center',
-              borderRadius: 4,
+              borderRadius: { xs: 2, sm: 4 },
             }}
           >
             <VideoLibraryIcon
               sx={{
-                fontSize: 80,
+                fontSize: { xs: 48, sm: 64, md: 80 },
                 color: 'primary.main',
-                mb: 2,
+                mb: { xs: 1, sm: 2 },
               }}
             />
             <Typography
@@ -107,6 +118,7 @@ export default function Home() {
               sx={{
                 fontWeight: 700,
                 color: 'primary.main',
+                fontSize: { xs: '2rem', sm: '2.75rem', md: '3.75rem' },
               }}
             >
               MyTube
@@ -114,21 +126,30 @@ export default function Home() {
             <Typography
               variant="h5"
               color="text.secondary"
-              sx={{ mb: 4 }}
+              sx={{ 
+                mb: { xs: 2, sm: 4 },
+                fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' },
+              }}
             >
               ברוכים הבאים לפלטפורמת הווידאו שלכם
             </Typography>
             <Typography
               variant="body1"
               color="text.secondary"
-              sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}
+              sx={{ 
+                mb: { xs: 3, sm: 4 }, 
+                maxWidth: 500, 
+                mx: 'auto',
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                px: { xs: 1, sm: 0 },
+              }}
             >
               כאן תוכלו לצפות, להעלות ולשתף סרטונים בקלות ובנוחות.
               התחילו עכשיו וגלו עולם של תוכן מרתק!
             </Typography>
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
-              spacing={2}
+              spacing={{ xs: 1.5, sm: 2 }}
               justifyContent="center"
             >
               <SignedOut>
@@ -138,9 +159,9 @@ export default function Home() {
                     size="large"
                     startIcon={<LoginIcon />}
                     sx={{
-                      px: 4,
-                      py: 1.5,
-                      fontSize: '1.1rem',
+                      px: { xs: 3, sm: 4 },
+                      py: { xs: 1, sm: 1.5 },
+                      fontSize: { xs: '0.9rem', sm: '1.1rem' },
                     }}
                   >
                     התחבר כדי להתחיל
@@ -155,9 +176,9 @@ export default function Home() {
                   size="large"
                   startIcon={<PlayArrowIcon />}
                   sx={{
-                    px: 4,
-                    py: 1.5,
-                    fontSize: '1.1rem',
+                    px: { xs: 3, sm: 4 },
+                    py: { xs: 1, sm: 1.5 },
+                    fontSize: { xs: '0.9rem', sm: '1.1rem' },
                   }}
                 >
                   התחל לצפות
@@ -167,9 +188,9 @@ export default function Home() {
                 variant="outlined"
                 size="large"
                 sx={{
-                  px: 4,
-                  py: 1.5,
-                  fontSize: '1.1rem',
+                  px: { xs: 3, sm: 4 },
+                  py: { xs: 1, sm: 1.5 },
+                  fontSize: { xs: '0.9rem', sm: '1.1rem' },
                 }}
               >
                 למידע נוסף

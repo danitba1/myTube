@@ -192,14 +192,14 @@ export default function DashboardPage() {
       <Container
         maxWidth={false}
         sx={{
-          py: 3,
-          px: { xs: 2, md: 3, lg: 4 },
+          py: { xs: 1.5, sm: 2, md: 3 },
+          px: { xs: 1, sm: 2, md: 3, lg: 4 },
         }}
       >
         <Box
           sx={{
             display: "flex",
-            gap: 3,
+            gap: { xs: 2, sm: 2, md: 3 },
             flexDirection: { xs: "column", lg: "row" },
           }}
         >
@@ -229,12 +229,13 @@ export default function DashboardPage() {
               flexShrink: 0,
             }}
           >
-            <Box sx={{ mb: 2, px: 1 }}>
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+            <Box sx={{ mb: { xs: 1, sm: 2 }, px: { xs: 0.5, sm: 1 } }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 0.5, sm: 1 } }}>
                 <Typography
                   variant="subtitle1"
                   sx={{
                     fontWeight: 600,
+                    fontSize: { xs: "0.9rem", sm: "1rem" },
                   }}
                 >
                   {searchTerms.length > 0
@@ -249,12 +250,14 @@ export default function DashboardPage() {
                       sx={{
                         bgcolor: "primary.main",
                         color: "white",
+                        width: { xs: 28, sm: 32 },
+                        height: { xs: 28, sm: 32 },
                         "&:hover": {
                           bgcolor: "primary.dark",
                         },
                       }}
                     >
-                      <ShuffleIcon fontSize="small" />
+                      <ShuffleIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -268,7 +271,14 @@ export default function DashboardPage() {
                       size="small"
                       color="primary"
                       variant="outlined"
-                      sx={{ mb: 0.5 }}
+                      sx={{ 
+                        mb: 0.5,
+                        height: { xs: 24, sm: 28 },
+                        "& .MuiChip-label": {
+                          fontSize: { xs: "0.7rem", sm: "0.8rem" },
+                          px: { xs: 1, sm: 1.5 },
+                        },
+                      }}
                     />
                   ))}
                 </Stack>
@@ -277,7 +287,7 @@ export default function DashboardPage() {
             <Box
               sx={{
                 height: { xs: "auto", lg: "calc(100vh - 180px)" },
-                maxHeight: { xs: 600, lg: "none" },
+                maxHeight: { xs: 350, sm: 450, md: 600, lg: "none" },
               }}
             >
               <VideoList

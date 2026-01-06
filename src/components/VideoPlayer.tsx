@@ -208,24 +208,26 @@ export default function VideoPlayer({
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          gap: 2,
-          mt: 2,
+          gap: { xs: 1, sm: 2 },
+          mt: { xs: 1.5, sm: 2 },
           mb: 1,
           flexWrap: "wrap",
         }}
       >
         <Button
           variant="contained"
-          startIcon={<SkipPreviousIcon />}
+          startIcon={<SkipPreviousIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />}
           onClick={onPrevious}
           disabled={!hasPrevious}
           sx={{
             borderRadius: "24px",
-            px: 3,
-            py: 1,
+            px: { xs: 2, sm: 3 },
+            py: { xs: 0.75, sm: 1 },
             textTransform: "none",
             fontWeight: 600,
+            fontSize: { xs: "0.8rem", sm: "0.875rem" },
             bgcolor: "grey.800",
+            minWidth: { xs: "auto", sm: 100 },
             "&:hover": {
               bgcolor: "grey.900",
             },
@@ -240,15 +242,17 @@ export default function VideoPlayer({
         
         <Button
           variant="contained"
-          startIcon={<BlockIcon />}
+          startIcon={<BlockIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />}
           onClick={onAlwaysSkip}
           sx={{
             borderRadius: "24px",
-            px: 3,
-            py: 1,
+            px: { xs: 2, sm: 3 },
+            py: { xs: 0.75, sm: 1 },
             textTransform: "none",
             fontWeight: 600,
+            fontSize: { xs: "0.8rem", sm: "0.875rem" },
             bgcolor: "error.main",
+            minWidth: { xs: "auto", sm: 100 },
             "&:hover": {
               bgcolor: "error.dark",
             },
@@ -259,16 +263,18 @@ export default function VideoPlayer({
         
         <Button
           variant="contained"
-          endIcon={<SkipNextIcon />}
+          endIcon={<SkipNextIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />}
           onClick={onNext}
           disabled={!hasNext}
           sx={{
             borderRadius: "24px",
-            px: 3,
-            py: 1,
+            px: { xs: 2, sm: 3 },
+            py: { xs: 0.75, sm: 1 },
             textTransform: "none",
             fontWeight: 600,
+            fontSize: { xs: "0.8rem", sm: "0.875rem" },
             bgcolor: "primary.main",
+            minWidth: { xs: "auto", sm: 100 },
             "&:hover": {
               bgcolor: "primary.dark",
             },
@@ -290,6 +296,7 @@ export default function VideoPlayer({
             fontWeight: 600,
             lineHeight: 1.3,
             mb: 1,
+            fontSize: { xs: "1rem", sm: "1.25rem" },
           }}
         >
           {video.title}
@@ -299,21 +306,21 @@ export default function VideoPlayer({
         <Box
           sx={{
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 2,
+            flexDirection: { xs: "column", md: "row" },
+            gap: { xs: 1.5, sm: 2 },
           }}
         >
           {/* Channel Info */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 1.5 }, flexWrap: "wrap" }}>
             <Avatar
-              sx={{ width: 40, height: 40, bgcolor: "primary.main" }}
+              sx={{ width: { xs: 32, sm: 40 }, height: { xs: 32, sm: 40 }, bgcolor: "primary.main", fontSize: { xs: "0.875rem", sm: "1rem" } }}
             >
               {video.channelName.charAt(0)}
             </Avatar>
             <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>
                 {video.channelName}
               </Typography>
             </Box>
@@ -321,12 +328,14 @@ export default function VideoPlayer({
               variant="contained"
               href={`https://www.youtube.com/channel/${video.channelId}?sub_confirmation=1`}
               target="_blank"
+              size="small"
               sx={{
                 borderRadius: "20px",
-                px: 2.5,
-                ml: 1,
+                px: { xs: 1.5, sm: 2.5 },
+                ml: { xs: 0, sm: 1 },
                 textTransform: "none",
                 fontWeight: 600,
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
               }}
             >
               הרשמה
@@ -334,7 +343,7 @@ export default function VideoPlayer({
           </Box>
 
           {/* Action Buttons */}
-          <Stack direction="row" spacing={1} flexWrap="wrap">
+          <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ gap: { xs: 0.5, sm: 1 } }}>
             <Box
               sx={{
                 display: "flex",
@@ -344,34 +353,40 @@ export default function VideoPlayer({
               }}
             >
               <Button
-                startIcon={<ThumbUpIcon />}
+                startIcon={<ThumbUpIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />}
                 sx={{
                   borderRadius: "20px 0 0 20px",
-                  px: 2,
+                  px: { xs: 1, sm: 2 },
+                  py: { xs: 0.5, sm: 0.75 },
                   textTransform: "none",
                   color: "text.primary",
+                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                  minWidth: "auto",
                   "&:hover": { bgcolor: "grey.200" },
                 }}
               >
                 {formatLikeCount(video.likeCount)}
               </Button>
               <Divider orientation="vertical" flexItem />
-              <IconButton sx={{ px: 1.5 }}>
-                <ThumbDownIcon />
+              <IconButton sx={{ px: { xs: 1, sm: 1.5 } }} size="small">
+                <ThumbDownIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
               </IconButton>
             </Box>
 
             <Button
-              startIcon={<ShareIcon />}
+              startIcon={<ShareIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />}
               onClick={() => {
                 navigator.clipboard.writeText(`https://www.youtube.com/watch?v=${video.id}`);
               }}
               sx={{
                 bgcolor: "grey.100",
                 borderRadius: "20px",
-                px: 2,
+                px: { xs: 1.5, sm: 2 },
+                py: { xs: 0.5, sm: 0.75 },
                 textTransform: "none",
                 color: "text.primary",
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                minWidth: "auto",
                 "&:hover": { bgcolor: "grey.200" },
               }}
             >
@@ -381,12 +396,13 @@ export default function VideoPlayer({
             <IconButton
               href={`https://www.youtube.com/watch?v=${video.id}`}
               target="_blank"
+              size="small"
               sx={{
                 bgcolor: "grey.100",
                 "&:hover": { bgcolor: "grey.200" },
               }}
             >
-              <MoreHorizIcon />
+              <MoreHorizIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />
             </IconButton>
           </Stack>
         </Box>
@@ -394,13 +410,13 @@ export default function VideoPlayer({
         {/* Description */}
         <Box
           sx={{
-            mt: 2,
-            p: 2,
+            mt: { xs: 1.5, sm: 2 },
+            p: { xs: 1.5, sm: 2 },
             bgcolor: "grey.100",
             borderRadius: 2,
           }}
         >
-          <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5, fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>
             {formatViewCount(video.viewCount)} • {formatRelativeTime(video.publishedAt)}
           </Typography>
           <Typography
@@ -408,10 +424,11 @@ export default function VideoPlayer({
             color="text.secondary"
             sx={{
               display: "-webkit-box",
-              WebkitLineClamp: 3,
+              WebkitLineClamp: { xs: 2, sm: 3 },
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
               whiteSpace: "pre-wrap",
+              fontSize: { xs: "0.8rem", sm: "0.875rem" },
             }}
           >
             {video.description || "אין תיאור זמין"}
