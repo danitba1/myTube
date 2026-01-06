@@ -13,8 +13,8 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@clerk/localizations": "^3.28.5",
-    "@clerk/nextjs": "^6.35.6",
+    "@clerk/localizations": "^3.32.1",
+    "@clerk/nextjs": "^6.36.5",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
@@ -23,8 +23,8 @@
     "@neondatabase/serverless": "^1.0.2",
     "drizzle-orm": "^0.45.1",
     "next": "^16.1.1",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "stylis": "^4.3.6",
     "stylis-plugin-rtl": "^2.1.1"
   },
