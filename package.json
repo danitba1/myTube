@@ -22,7 +22,7 @@
     "@mui/material": "^7.3.5",
     "@neondatabase/serverless": "^1.0.2",
     "drizzle-orm": "^0.45.1",
-    "next": "16.0.6",
+    "next": "^16.1.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "stylis": "^4.3.6",
@@ -36,7 +36,7 @@
     "@types/stylis": "^4.2.7",
     "drizzle-kit": "^0.31.8",
     "eslint": "^9",
-    "eslint-config-next": "16.0.6",
+    "eslint-config-next": "^16.1.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
