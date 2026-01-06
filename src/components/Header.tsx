@@ -1,14 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import dynamic from "next/dynamic";
-import { AppBar, Toolbar, Box, IconButton, Badge, Typography, Skeleton, Collapse } from "@mui/material";
+import { AppBar, Toolbar, Box, IconButton, Badge, Typography, Skeleton } from "@mui/material";
 import {
   VideoCall as VideoCallIcon,
   Notifications as NotificationsIcon,
   VideoLibrary as VideoLibraryIcon,
-  Search as SearchIcon,
-  Close as CloseIcon,
 } from "@mui/icons-material";
 import { UserButton } from "@clerk/nextjs";
 import styles from "./Header.module.css";
@@ -31,8 +28,6 @@ interface HeaderProps {
 }
 
 export default function Header({ onSearch }: HeaderProps) {
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-
   return (
     <AppBar position="sticky" elevation={0} className={styles.appBar}>
       <Toolbar className={styles.toolbar}>
@@ -40,30 +35,19 @@ export default function Header({ onSearch }: HeaderProps) {
         <Box className={styles.logoSection}>
           <Box className={styles.logoWrapper}>
             <VideoLibraryIcon className={styles.logoIcon} />
-            <Typography
-              variant="h6"
-              className={`${styles.logoText} ${mobileSearchOpen ? styles.logoTextHidden : ""}`}
-            >
+            <Typography variant="h6" className={styles.logoText}>
               MyTube
             </Typography>
           </Box>
         </Box>
 
         {/* Center Section - Search (Desktop) */}
-        <Box className={styles.searchSection}>
+        <Box className={styles.searchSectionDesktop}>
           <SearchBox onSearch={onSearch} />
         </Box>
 
         {/* Right Section - Actions */}
         <Box className={styles.actionsSection}>
-          {/* Mobile Search Toggle */}
-          <IconButton
-            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-            className={styles.mobileSearchToggle}
-          >
-            {mobileSearchOpen ? <CloseIcon /> : <SearchIcon />}
-          </IconButton>
-          
           <IconButton className={`${styles.iconButton} ${styles.mdDesktopOnly}`}>
             <VideoCallIcon />
           </IconButton>
@@ -87,15 +71,10 @@ export default function Header({ onSearch }: HeaderProps) {
         </Box>
       </Toolbar>
 
-      {/* Mobile Search - Collapsible */}
-      <Collapse in={mobileSearchOpen} className={styles.mobileSearchCollapse}>
-        <Box className={styles.mobileSearchWrapper}>
-          <SearchBox onSearch={(query) => {
-            onSearch?.(query);
-            setMobileSearchOpen(false);
-          }} />
-        </Box>
-      </Collapse>
+      {/* Mobile Search - Always visible on mobile */}
+      <Box className={styles.mobileSearchSection}>
+        <SearchBox onSearch={onSearch} />
+      </Box>
     </AppBar>
   );
 }

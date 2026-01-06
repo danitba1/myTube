@@ -11,6 +11,7 @@
 .toolbar {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: var(--spacing-sm);
   min-height: 56px;
   padding-inline: var(--spacing-sm);
@@ -60,26 +61,18 @@
   color: var(--color-text-primary);
   letter-spacing: -0.5px;
   font-size: var(--font-size-md);
-}
-
-@media (min-width: 600px) {
-  .logoText {
-    font-size: var(--font-size-lg);
-  }
-}
-
-.logoTextHidden {
   display: none;
 }
 
 @media (min-width: 600px) {
-  .logoTextHidden {
+  .logoText {
     display: block;
+    font-size: var(--font-size-lg);
   }
 }
 
-/* Center Section - Search */
-.searchSection {
+/* Center Section - Search (Desktop only in toolbar) */
+.searchSectionDesktop {
   flex: 1;
   display: none;
   justify-content: center;
@@ -88,7 +81,7 @@
 }
 
 @media (min-width: 600px) {
-  .searchSection {
+  .searchSectionDesktop {
     display: flex;
   }
 }
@@ -124,16 +117,6 @@
   background-color: var(--color-grey-100);
 }
 
-.mobileSearchToggle {
-  composes: iconButton;
-}
-
-@media (min-width: 600px) {
-  .mobileSearchToggle {
-    display: none;
-  }
-}
-
 .desktopOnly {
   display: none;
 }
@@ -144,24 +127,28 @@
   }
 }
 
+.mdDesktopOnly {
+  display: none;
+}
+
 @media (min-width: 900px) {
   .mdDesktopOnly {
     display: flex;
   }
 }
 
-.mdDesktopOnly {
-  display: none;
-}
-
-/* Mobile Search Collapse */
-.mobileSearchWrapper {
-  padding: 0 var(--spacing-md) var(--spacing-md);
+/* Mobile Search Section - Always visible below toolbar on mobile */
+.mobileSearchSection {
+  display: block;
+  padding: 0 var(--spacing-sm) var(--spacing-sm);
 }
 
 @media (min-width: 600px) {
-  .mobileSearchCollapse {
+  .mobileSearchSection {
     display: none;
   }
 }
 
+.searchSkeleton {
+  border-radius: var(--radius-lg);
+}
