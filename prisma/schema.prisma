@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// User model - linked to Clerk user ID
+model User {
+  id            String   @id @default(cuid())
+  clerkId       String   @unique // Clerk user ID
+  email         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  preferences   UserPreferences?
+  searchHistory SearchHistory[]
+
+  @@index([clerkId])
+}
+
+// User preferences for the app
+model UserPreferences {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Video player preferences
+  autoplay          Boolean  @default(true)
+  defaultVolume     Int      @default(100) // 0-100
+  
+  // Search preferences  
+  maxSearchResults  Int      @default(20)
+  
+  // UI preferences
+  theme             String   @default("light") // light, dark, system
+  language          String   @default("he")    // he, en
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// Search history for quick access to previous searches
+model SearchHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  searchQuery String   // The comma-separated search terms
+  searchCount Int      @default(1) // How many times this search was performed
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, searchQuery])
+  @@index([userId])
+  @@index([updatedAt])
+}
