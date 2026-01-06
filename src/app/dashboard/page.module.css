@@ -1,7 +1,7 @@
 /* Dashboard Page Styles */
 
 .pageContainer {
-  min-height: 100vh;
+  flex: 1;
   background-color: var(--color-background-default);
 }
 
