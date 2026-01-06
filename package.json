@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
@@ -21,16 +21,12 @@
     "@mui/icons-material": "^7.3.5",
     "@mui/material": "^7.3.5",
     "@neondatabase/serverless": "^1.0.2",
-    "@prisma/adapter-neon": "^7.2.0",
-    "@prisma/client": "^7.2.0",
     "drizzle-orm": "^0.45.1",
     "next": "16.0.6",
-    "prisma": "^7.2.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "stylis": "^4.3.6",
-    "stylis-plugin-rtl": "^2.1.1",
-    "ws": "^8.18.3"
+    "stylis-plugin-rtl": "^2.1.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -38,7 +34,6 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/stylis": "^4.2.7",
-    "@types/ws": "^8.18.1",
     "drizzle-kit": "^0.31.8",
     "eslint": "^9",
     "eslint-config-next": "16.0.6",
