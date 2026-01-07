@@ -4,13 +4,14 @@ import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 
 const LOCAL_STORAGE_KEY = "mytube_search_history";
+const MAX_HISTORY_ITEMS = 15;
 
 export function useSearchHistory() {
   const { isSignedIn, isLoaded } = useUser();
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load search history
+  // Load search history on login/page load
   useEffect(() => {
     if (!isLoaded) return;
 
@@ -18,7 +19,7 @@ export function useSearchHistory() {
       setIsLoading(true);
       
       if (isSignedIn) {
-        // Load from database for signed-in users
+        // Load last 15 searches from database for signed-in users
         try {
           const response = await fetch("/api/user/search-history");
           if (response.ok) {
@@ -42,7 +43,8 @@ export function useSearchHistory() {
       try {
         const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (saved) {
-          setSearchHistory(JSON.parse(saved));
+          const parsed = JSON.parse(saved);
+          setSearchHistory(parsed.slice(0, MAX_HISTORY_ITEMS));
         }
       } catch (e) {
         console.error("Failed to load search history from localStorage:", e);
@@ -52,21 +54,26 @@ export function useSearchHistory() {
     loadHistory();
   }, [isSignedIn, isLoaded]);
 
-  // Add to history (localOnly = true means only update UI state, not DB)
-  const addToHistory = useCallback(async (query: string, searchTerms?: string[], resultsCount?: number, localOnly: boolean = false) => {
-    // Update local state immediately for UI
+  // Add to history - always saves to DB for signed-in users
+  const addToHistory = useCallback(async (
+    query: string, 
+    searchTerms?: string[], 
+    resultsCount?: number, 
+    localOnly: boolean = false
+  ) => {
+    // Update local state immediately for UI (move to top, remove duplicates)
     setSearchHistory((prev) => {
       const filtered = prev.filter(
         (item) => item.toLowerCase() !== query.toLowerCase()
       );
-      return [query, ...filtered].slice(0, 10);
+      return [query, ...filtered].slice(0, MAX_HISTORY_ITEMS);
     });
 
     // If localOnly, skip database/localStorage save (dashboard will handle it)
     if (localOnly) return;
 
     if (isSignedIn) {
-      // Save to database
+      // Save to database (every search is saved with timestamp)
       try {
         await fetch("/api/user/search-history", {
           method: "POST",
@@ -82,7 +89,7 @@ export function useSearchHistory() {
         const filtered = searchHistory.filter(
           (item) => item.toLowerCase() !== query.toLowerCase()
         );
-        const updated = [query, ...filtered].slice(0, 10);
+        const updated = [query, ...filtered].slice(0, MAX_HISTORY_ITEMS);
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
       } catch (e) {
         console.error("Failed to save to localStorage:", e);
@@ -141,4 +148,3 @@ export function useSearchHistory() {
     clearHistory,
   };
 }
-

@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db, searchHistory } from "@/db";
 import { eq, desc, and } from "drizzle-orm";
 
-// GET - Fetch user's search history
+// GET - Fetch user's last 15 search history entries
 export async function GET() {
   try {
     const { userId } = await auth();
@@ -15,15 +15,26 @@ export async function GET() {
       );
     }
 
+    // Get last 15 unique search queries (most recent first)
     const history = await db
       .select()
       .from(searchHistory)
       .where(eq(searchHistory.clerkUserId, userId))
       .orderBy(desc(searchHistory.createdAt))
-      .limit(20);
+      .limit(50); // Fetch more to ensure we get 15 unique ones
 
-    // Extract unique search queries (most recent first)
-    const uniqueQueries = [...new Set(history.map((h) => h.searchQuery))].slice(0, 10);
+    // Extract unique search queries (most recent first), limit to 15
+    const seen = new Set<string>();
+    const uniqueQueries: string[] = [];
+    
+    for (const entry of history) {
+      const query = entry.searchQuery.toLowerCase();
+      if (!seen.has(query)) {
+        seen.add(query);
+        uniqueQueries.push(entry.searchQuery);
+        if (uniqueQueries.length >= 15) break;
+      }
+    }
 
     return NextResponse.json({ history: uniqueQueries });
   } catch (error) {
@@ -35,7 +46,7 @@ export async function GET() {
   }
 }
 
-// POST - Add new search to history (only if not already exists)
+// POST - Save every search to history with timestamp
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
@@ -57,28 +68,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if this search query already exists for this user
-    const existing = await db
-      .select()
-      .from(searchHistory)
-      .where(
-        and(
-          eq(searchHistory.clerkUserId, userId),
-          eq(searchHistory.searchQuery, searchQuery)
-        )
-      )
-      .limit(1);
-
-    if (existing.length > 0) {
-      // Query already exists - skip insertion
-      return NextResponse.json({ 
-        success: true, 
-        entry: existing[0],
-        message: "Search query already exists in history" 
-      });
-    }
-
-    // Insert new entry only if it doesn't exist
+    // Always save every search with timestamp (no deduplication)
     const newEntry = await db
       .insert(searchHistory)
       .values({
@@ -115,7 +105,7 @@ export async function DELETE(request: NextRequest) {
     const queryToDelete = searchParams.get("query");
 
     if (queryToDelete) {
-      // Delete specific query for this user
+      // Delete all entries with this query for this user
       await db
         .delete(searchHistory)
         .where(
@@ -140,4 +130,3 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
-
