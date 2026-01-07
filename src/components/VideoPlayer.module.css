@@ -56,6 +56,35 @@
   height: 100%;
 }
 
+/* PiP Button */
+.pipButton {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-xs);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  z-index: 10;
+}
+
+.pipButton:hover {
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+.playerWrapper:hover .pipButton {
+  opacity: 1;
+}
+
+/* Always show on touch devices */
+@media (hover: none) {
+  .pipButton {
+    opacity: 1;
+  }
+}
+
 /* Navigation Buttons */
 .navigationButtons {
   display: flex;

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
-import { Box, Typography, Avatar, Button, IconButton, Divider, Stack, Skeleton } from "@mui/material";
+import { useEffect, useRef, useCallback, useState } from "react";
+import { Box, Typography, Avatar, Button, IconButton, Divider, Stack, Skeleton, Tooltip } from "@mui/material";
 import {
   ThumbUp as ThumbUpIcon,
   ThumbDown as ThumbDownIcon,
@@ -10,6 +10,7 @@ import {
   SkipPrevious as SkipPreviousIcon,
   SkipNext as SkipNextIcon,
   Block as BlockIcon,
+  PictureInPictureAlt as PipIcon,
 } from "@mui/icons-material";
 import { Video, formatViewCount, formatLikeCount, formatRelativeTime } from "@/types/youtube";
 import styles from "./VideoPlayer.module.css";
@@ -28,11 +29,14 @@ declare global {
           playerVars?: {
             autoplay?: number;
             enablejsapi?: number;
+            playsinline?: number;
           };
         }
       ) => any;
       PlayerState: {
         ENDED: number;
+        PLAYING: number;
+        PAUSED: number;
       };
     };
     onYouTubeIframeAPIReady: () => void;
@@ -60,18 +64,109 @@ export default function VideoPlayer({
 }: VideoPlayerProps) {
   const playerRef = useRef<any>(null);
   const onNextRef = useRef(onNext);
+  const onPreviousRef = useRef(onPrevious);
   const hasNextRef = useRef(hasNext);
+  const hasPreviousRef = useRef(hasPrevious);
+  const videoRef = useRef(video);
+  const [isPipSupported, setIsPipSupported] = useState(false);
+  const [isInPip, setIsInPip] = useState(false);
 
+  // Keep refs updated
   useEffect(() => {
     onNextRef.current = onNext;
+    onPreviousRef.current = onPrevious;
     hasNextRef.current = hasNext;
-  }, [onNext, hasNext]);
+    hasPreviousRef.current = hasPrevious;
+    videoRef.current = video;
+  }, [onNext, onPrevious, hasNext, hasPrevious, video]);
+
+  // Check PiP support
+  useEffect(() => {
+    setIsPipSupported('pictureInPictureEnabled' in document);
+  }, []);
+
+  // Setup Media Session API for lock screen / notification controls
+  useEffect(() => {
+    if (!video || !('mediaSession' in navigator)) return;
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: video.title,
+      artist: video.channelName,
+      album: 'MyTube',
+      artwork: [
+        { src: `https://img.youtube.com/vi/${video.id}/mqdefault.jpg`, sizes: '320x180', type: 'image/jpeg' },
+        { src: `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`, sizes: '480x360', type: 'image/jpeg' },
+      ]
+    });
+
+    navigator.mediaSession.setActionHandler('play', () => {
+      playerRef.current?.playVideo?.();
+    });
+
+    navigator.mediaSession.setActionHandler('pause', () => {
+      playerRef.current?.pauseVideo?.();
+    });
+
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      if (hasPreviousRef.current && onPreviousRef.current) {
+        onPreviousRef.current();
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      if (hasNextRef.current && onNextRef.current) {
+        onNextRef.current();
+      }
+    });
+
+    return () => {
+      navigator.mediaSession.setActionHandler('play', null);
+      navigator.mediaSession.setActionHandler('pause', null);
+      navigator.mediaSession.setActionHandler('previoustrack', null);
+      navigator.mediaSession.setActionHandler('nexttrack', null);
+    };
+  }, [video]);
 
   const handleStateChange = useCallback((event: { data: number }) => {
+    // Update media session playback state
+    if ('mediaSession' in navigator) {
+      if (event.data === 1) { // PLAYING
+        navigator.mediaSession.playbackState = 'playing';
+      } else if (event.data === 2) { // PAUSED
+        navigator.mediaSession.playbackState = 'paused';
+      }
+    }
+
+    // Auto-play next when video ends
     if (event.data === 0 && hasNextRef.current && onNextRef.current) {
       setTimeout(() => {
         onNextRef.current?.();
       }, 1000);
+    }
+  }, []);
+
+  // Toggle Picture-in-Picture
+  const togglePictureInPicture = useCallback(async () => {
+    try {
+      const iframe = document.querySelector('#youtube-player iframe') as HTMLIFrameElement;
+      if (!iframe) return;
+
+      // Try to get the video element inside the iframe (won't work due to cross-origin)
+      // Instead, we'll use a workaround - open in new tab with PiP hint
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        setIsInPip(false);
+      } else {
+        // Since YouTube iframe doesn't allow direct PiP access,
+        // we'll open the video in YouTube's native player which supports PiP
+        const youtubeUrl = `https://www.youtube.com/watch?v=${videoRef.current?.id}`;
+        window.open(youtubeUrl, '_blank');
+        
+        // Show a message to user
+        alert('לצפייה ברקע, השתמש בתפריט הדפדפן לבחירת "תמונה בתוך תמונה" או "Picture-in-Picture"');
+      }
+    } catch (error) {
+      console.error('PiP error:', error);
     }
   }, []);
 
@@ -99,6 +194,7 @@ export default function VideoPlayer({
         playerVars: {
           autoplay: 1,
           enablejsapi: 1,
+          playsinline: 1, // Important for iOS to allow inline playback
         },
       });
     };
@@ -163,6 +259,16 @@ export default function VideoPlayer({
       {/* YouTube Player */}
       <Box className={styles.playerWrapper}>
         <div id="youtube-player" className={styles.player} />
+        
+        {/* PiP Button Overlay */}
+        <Tooltip title="פתח ביוטיוב (לצפייה ברקע)">
+          <IconButton
+            onClick={togglePictureInPicture}
+            className={styles.pipButton}
+          >
+            <PipIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
 
       {/* Navigation Buttons */}
