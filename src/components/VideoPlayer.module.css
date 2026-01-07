@@ -56,29 +56,25 @@
   height: 100%;
 }
 
-/* Audio Mode Button */
-.audioModeButton {
-  position: absolute;
-  top: var(--spacing-sm);
-  right: var(--spacing-sm);
-  background-color: rgba(0, 0, 0, 0.7);
+/* Audio Mode Navigation Button */
+.navButtonAudio {
+  composes: navButton;
+  background-color: #6366f1;
   color: white;
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-xs);
-  transition: background-color var(--transition-base);
-  z-index: 10;
 }
 
-.audioModeButton:hover {
-  background-color: rgba(0, 0, 0, 0.9);
+.navButtonAudio:hover {
+  background-color: #4f46e5;
 }
 
-.audioModeButton.audioModeActive {
-  background-color: var(--color-primary);
+.navButtonAudioActive {
+  composes: navButton;
+  background-color: #22c55e;
+  color: white;
 }
 
-.audioModeButton.audioModeActive:hover {
-  background-color: var(--color-primary-dark);
+.navButtonAudioActive:hover {
+  background-color: #16a34a;
 }
 
 /* Audio Mode Overlay */

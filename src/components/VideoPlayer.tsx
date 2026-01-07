@@ -298,16 +298,6 @@ export default function VideoPlayer({
             <Typography className={styles.audioModeSubtext}>המסך יישאר דלוק כדי להמשיך לנגן</Typography>
           </Box>
         )}
-        
-        {/* Audio Mode Toggle Button */}
-        <Tooltip title={isAudioMode ? "חזור לווידאו" : "מצב שמע (השאר מסך פעיל)"}>
-          <IconButton
-            onClick={toggleAudioMode}
-            className={`${styles.audioModeButton} ${isAudioMode ? styles.audioModeActive : ''}`}
-          >
-            {isAudioMode ? <VideocamIcon /> : <HeadphonesIcon />}
-          </IconButton>
-        </Tooltip>
       </Box>
 
       {/* Navigation Buttons */}
@@ -329,6 +319,15 @@ export default function VideoPlayer({
           className={styles.navButtonSkip}
         >
           דלג תמיד
+        </Button>
+        
+        <Button
+          variant="contained"
+          startIcon={isAudioMode ? <VideocamIcon className={styles.navIcon} /> : <HeadphonesIcon className={styles.navIcon} />}
+          onClick={toggleAudioMode}
+          className={isAudioMode ? styles.navButtonAudioActive : styles.navButtonAudio}
+        >
+          {isAudioMode ? "וידאו" : "שמע"}
         </Button>
         
         <Button
