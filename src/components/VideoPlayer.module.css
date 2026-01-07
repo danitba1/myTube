@@ -56,8 +56,8 @@
   height: 100%;
 }
 
-/* PiP Button */
-.pipButton {
+/* Audio Mode Button */
+.audioModeButton {
   position: absolute;
   top: var(--spacing-sm);
   right: var(--spacing-sm);
@@ -65,24 +65,62 @@
   color: white;
   padding: var(--spacing-sm);
   border-radius: var(--radius-xs);
-  opacity: 0;
-  transition: opacity var(--transition-base);
+  transition: background-color var(--transition-base);
   z-index: 10;
 }
 
-.pipButton:hover {
+.audioModeButton:hover {
   background-color: rgba(0, 0, 0, 0.9);
 }
 
-.playerWrapper:hover .pipButton {
-  opacity: 1;
+.audioModeButton.audioModeActive {
+  background-color: var(--color-primary);
 }
 
-/* Always show on touch devices */
-@media (hover: none) {
-  .pipButton {
-    opacity: 1;
-  }
+.audioModeButton.audioModeActive:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* Audio Mode Overlay */
+.audioMode .player {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.audioModeOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: white;
+  z-index: 5;
+}
+
+.audioModeIcon {
+  font-size: 64px !important;
+  margin-bottom: var(--spacing-md);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+.audioModeText {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-bottom: var(--spacing-xs);
+}
+
+.audioModeSubtext {
+  font-size: var(--font-size-sm);
+  opacity: 0.7;
+  text-align: center;
+  padding: 0 var(--spacing-md);
 }
 
 /* Navigation Buttons */

@@ -10,7 +10,8 @@ import {
   SkipPrevious as SkipPreviousIcon,
   SkipNext as SkipNextIcon,
   Block as BlockIcon,
-  PictureInPictureAlt as PipIcon,
+  Headphones as HeadphonesIcon,
+  Videocam as VideocamIcon,
 } from "@mui/icons-material";
 import { Video, formatViewCount, formatLikeCount, formatRelativeTime } from "@/types/youtube";
 import styles from "./VideoPlayer.module.css";
@@ -68,8 +69,8 @@ export default function VideoPlayer({
   const hasNextRef = useRef(hasNext);
   const hasPreviousRef = useRef(hasPrevious);
   const videoRef = useRef(video);
-  const [isPipSupported, setIsPipSupported] = useState(false);
-  const [isInPip, setIsInPip] = useState(false);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const [isAudioMode, setIsAudioMode] = useState(false);
 
   // Keep refs updated
   useEffect(() => {
@@ -79,11 +80,6 @@ export default function VideoPlayer({
     hasPreviousRef.current = hasPrevious;
     videoRef.current = video;
   }, [onNext, onPrevious, hasNext, hasPrevious, video]);
-
-  // Check PiP support
-  useEffect(() => {
-    setIsPipSupported('pictureInPictureEnabled' in document);
-  }, []);
 
   // Setup Media Session API for lock screen / notification controls
   useEffect(() => {
@@ -145,30 +141,64 @@ export default function VideoPlayer({
     }
   }, []);
 
-  // Toggle Picture-in-Picture
-  const togglePictureInPicture = useCallback(async () => {
-    try {
-      const iframe = document.querySelector('#youtube-player iframe') as HTMLIFrameElement;
-      if (!iframe) return;
-
-      // Try to get the video element inside the iframe (won't work due to cross-origin)
-      // Instead, we'll use a workaround - open in new tab with PiP hint
-      if (document.pictureInPictureElement) {
-        await document.exitPictureInPicture();
-        setIsInPip(false);
-      } else {
-        // Since YouTube iframe doesn't allow direct PiP access,
-        // we'll open the video in YouTube's native player which supports PiP
-        const youtubeUrl = `https://www.youtube.com/watch?v=${videoRef.current?.id}`;
-        window.open(youtubeUrl, '_blank');
-        
-        // Show a message to user
-        alert('לצפייה ברקע, השתמש בתפריט הדפדפן לבחירת "תמונה בתוך תמונה" או "Picture-in-Picture"');
+  // Request Wake Lock to keep device awake during playback
+  const requestWakeLock = useCallback(async () => {
+    if ('wakeLock' in navigator) {
+      try {
+        wakeLockRef.current = await navigator.wakeLock.request('screen');
+        console.log('Wake Lock activated');
+      } catch (err) {
+        console.log('Wake Lock failed:', err);
       }
-    } catch (error) {
-      console.error('PiP error:', error);
     }
   }, []);
+
+  // Release Wake Lock
+  const releaseWakeLock = useCallback(async () => {
+    if (wakeLockRef.current) {
+      try {
+        await wakeLockRef.current.release();
+        wakeLockRef.current = null;
+        console.log('Wake Lock released');
+      } catch (err) {
+        console.log('Wake Lock release failed:', err);
+      }
+    }
+  }, []);
+
+  // Toggle Audio-Only Mode (hides video, saves battery)
+  const toggleAudioMode = useCallback(() => {
+    setIsAudioMode(prev => {
+      if (!prev) {
+        // Entering audio mode - request wake lock
+        requestWakeLock();
+      } else {
+        // Exiting audio mode - release wake lock
+        releaseWakeLock();
+      }
+      return !prev;
+    });
+  }, [requestWakeLock, releaseWakeLock]);
+
+  // Auto-request wake lock when playing
+  useEffect(() => {
+    if (isAudioMode) {
+      requestWakeLock();
+      
+      // Re-request wake lock if it gets released (e.g., when visibility changes)
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible' && isAudioMode) {
+          requestWakeLock();
+        }
+      };
+      
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        releaseWakeLock();
+      };
+    }
+  }, [isAudioMode, requestWakeLock, releaseWakeLock]);
 
   useEffect(() => {
     if (!video) return;
@@ -257,16 +287,25 @@ export default function VideoPlayer({
   return (
     <Box className={styles.container}>
       {/* YouTube Player */}
-      <Box className={styles.playerWrapper}>
+      <Box className={`${styles.playerWrapper} ${isAudioMode ? styles.audioMode : ''}`}>
         <div id="youtube-player" className={styles.player} />
         
-        {/* PiP Button Overlay */}
-        <Tooltip title="פתח ביוטיוב (לצפייה ברקע)">
+        {/* Audio Mode Overlay */}
+        {isAudioMode && (
+          <Box className={styles.audioModeOverlay}>
+            <HeadphonesIcon className={styles.audioModeIcon} />
+            <Typography className={styles.audioModeText}>מצב שמע בלבד</Typography>
+            <Typography className={styles.audioModeSubtext}>המסך יישאר דלוק כדי להמשיך לנגן</Typography>
+          </Box>
+        )}
+        
+        {/* Audio Mode Toggle Button */}
+        <Tooltip title={isAudioMode ? "חזור לווידאו" : "מצב שמע (השאר מסך פעיל)"}>
           <IconButton
-            onClick={togglePictureInPicture}
-            className={styles.pipButton}
+            onClick={toggleAudioMode}
+            className={`${styles.audioModeButton} ${isAudioMode ? styles.audioModeActive : ''}`}
           >
-            <PipIcon />
+            {isAudioMode ? <VideocamIcon /> : <HeadphonesIcon />}
           </IconButton>
         </Tooltip>
       </Box>
