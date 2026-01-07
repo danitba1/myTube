@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get("q");
   const maxResults = searchParams.get("maxResults") || "20";
-  const order = searchParams.get("order"); // "date" for newest first, default is "relevance"
+  const preferNew = searchParams.get("preferNew") === "true"; // Filter to last 3 years
 
   if (!query) {
     return NextResponse.json(
@@ -42,9 +42,11 @@ export async function GET(request: NextRequest) {
     searchUrl.searchParams.set("maxResults", maxResults);
     searchUrl.searchParams.set("key", YOUTUBE_API_KEY);
     
-    // Set order parameter if provided (date = newest first)
-    if (order && ["date", "rating", "relevance", "viewCount"].includes(order)) {
-      searchUrl.searchParams.set("order", order);
+    // If preferNew is true, filter to videos from the last 3 years (keeps relevance sorting)
+    if (preferNew) {
+      const threeYearsAgo = new Date();
+      threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
+      searchUrl.searchParams.set("publishedAfter", threeYearsAgo.toISOString());
     }
 
     const searchResponse = await fetch(searchUrl.toString());

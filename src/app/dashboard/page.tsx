@@ -52,9 +52,9 @@ export default function DashboardPage() {
       );
 
       const searchPromises = terms.map(async (term) => {
-        const orderParam = preferNew ? "&order=date" : "";
+        const preferNewParam = preferNew ? "&preferNew=true" : "";
         const response = await fetch(
-          `/api/youtube/search?q=${encodeURIComponent(term)}&maxResults=${resultsPerTerm}${orderParam}`
+          `/api/youtube/search?q=${encodeURIComponent(term)}&maxResults=${resultsPerTerm}${preferNewParam}`
         );
 
         if (!response.ok) {
