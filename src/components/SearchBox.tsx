@@ -8,6 +8,8 @@ import {
   Chip,
   Typography,
   CircularProgress,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import { 
   Search as SearchIcon, 
@@ -19,11 +21,12 @@ import { useSearchHistory } from "@/hooks/useSearchHistory";
 import styles from "./SearchBox.module.css";
 
 interface SearchBoxProps {
-  onSearch?: (query: string) => void;
+  onSearch?: (query: string, preferNew?: boolean) => void;
 }
 
 export default function SearchBox({ onSearch }: SearchBoxProps) {
   const [query, setQuery] = useState("");
+  const [preferNew, setPreferNew] = useState(false);
   const { 
     searchHistory, 
     isLoading: isHistoryLoading,
@@ -36,7 +39,7 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
     if (onSearch && query.trim()) {
       const trimmedQuery = query.trim();
       addToHistory(trimmedQuery, undefined, undefined, true);
-      onSearch(trimmedQuery);
+      onSearch(trimmedQuery, preferNew);
     }
   };
 
@@ -91,6 +94,20 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
           <SearchIcon className={styles.searchIcon} />
         </IconButton>
       </Paper>
+
+      {/* Prefer New Checkbox */}
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={preferNew}
+            onChange={(e) => setPreferNew(e.target.checked)}
+            size="small"
+            className={styles.preferNewCheckbox}
+          />
+        }
+        label="העדפה לסרטונים חדשים"
+        className={styles.preferNewLabel}
+      />
 
       {/* Search History */}
       {isHistoryLoading ? (

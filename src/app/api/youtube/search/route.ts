@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get("q");
   const maxResults = searchParams.get("maxResults") || "20";
+  const order = searchParams.get("order"); // "date" for newest first, default is "relevance"
 
   if (!query) {
     return NextResponse.json(
@@ -40,6 +41,11 @@ export async function GET(request: NextRequest) {
     searchUrl.searchParams.set("type", "video");
     searchUrl.searchParams.set("maxResults", maxResults);
     searchUrl.searchParams.set("key", YOUTUBE_API_KEY);
+    
+    // Set order parameter if provided (date = newest first)
+    if (order && ["date", "rating", "relevance", "viewCount"].includes(order)) {
+      searchUrl.searchParams.set("order", order);
+    }
 
     const searchResponse = await fetch(searchUrl.toString());
     

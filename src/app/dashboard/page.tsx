@@ -30,7 +30,7 @@ export default function DashboardPage() {
   
   const { skippedVideoIds, addToSkipList } = useSkippedVideos();
 
-  const handleSearch = useCallback(async (query: string) => {
+  const handleSearch = useCallback(async (query: string, preferNew?: boolean) => {
     if (!query.trim()) return;
 
     const terms = query
@@ -52,8 +52,9 @@ export default function DashboardPage() {
       );
 
       const searchPromises = terms.map(async (term) => {
+        const orderParam = preferNew ? "&order=date" : "";
         const response = await fetch(
-          `/api/youtube/search?q=${encodeURIComponent(term)}&maxResults=${resultsPerTerm}`
+          `/api/youtube/search?q=${encodeURIComponent(term)}&maxResults=${resultsPerTerm}${orderParam}`
         );
 
         if (!response.ok) {

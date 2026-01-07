@@ -231,3 +231,28 @@
   color: var(--color-error);
 }
 
+/* Prefer New Checkbox */
+.preferNewLabel {
+  margin-top: var(--spacing-xs);
+  margin-inline-start: var(--spacing-xs);
+}
+
+.preferNewLabel :global(.MuiFormControlLabel-label) {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+@media (min-width: 600px) {
+  .preferNewLabel :global(.MuiFormControlLabel-label) {
+    font-size: var(--font-size-sm);
+  }
+}
+
+.preferNewCheckbox {
+  padding: 4px;
+}
+
+.preferNewCheckbox:global(.Mui-checked) {
+  color: var(--color-primary);
+}
+

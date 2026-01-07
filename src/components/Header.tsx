@@ -24,7 +24,7 @@ const SearchBox = dynamic(() => import("./SearchBox"), {
 });
 
 interface HeaderProps {
-  onSearch?: (query: string) => void;
+  onSearch?: (query: string, preferNew?: boolean) => void;
 }
 
 export default function Header({ onSearch }: HeaderProps) {
