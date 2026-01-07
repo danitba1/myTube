@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 
 const LOCAL_STORAGE_KEY = "mytube_search_history";
-const MAX_HISTORY_ITEMS = 15;
+const MAX_HISTORY_ITEMS = 10;
 
 export function useSearchHistory() {
   const { isSignedIn, isLoaded } = useUser();

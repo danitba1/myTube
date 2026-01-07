@@ -87,8 +87,9 @@ export default function DashboardPage() {
         setSelectedVideo(null);
       }
 
+      // Save search to history
       try {
-        await fetch("/api/user/search-history", {
+        const historyResponse = await fetch("/api/user/search-history", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -97,6 +98,11 @@ export default function DashboardPage() {
             resultsCount: shuffledVideos.length,
           }),
         });
+        
+        if (!historyResponse.ok) {
+          const errorData = await historyResponse.json().catch(() => ({}));
+          console.error("Failed to save search history:", historyResponse.status, errorData);
+        }
       } catch (saveError) {
         console.error("Failed to save search history:", saveError);
       }

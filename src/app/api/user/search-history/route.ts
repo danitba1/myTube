@@ -15,15 +15,15 @@ export async function GET() {
       );
     }
 
-    // Get last 15 unique search queries (most recent first)
+    // Get last 10 unique search queries (most recent first)
     const history = await db
       .select()
       .from(searchHistory)
       .where(eq(searchHistory.clerkUserId, userId))
       .orderBy(desc(searchHistory.createdAt))
-      .limit(50); // Fetch more to ensure we get 15 unique ones
+      .limit(50); // Fetch more to ensure we get 10 unique ones
 
-    // Extract unique search queries (most recent first), limit to 15
+    // Extract unique search queries (most recent first), limit to 10
     const seen = new Set<string>();
     const uniqueQueries: string[] = [];
     
@@ -32,7 +32,7 @@ export async function GET() {
       if (!seen.has(query)) {
         seen.add(query);
         uniqueQueries.push(entry.searchQuery);
-        if (uniqueQueries.length >= 15) break;
+        if (uniqueQueries.length >= 10) break;
       }
     }
 
