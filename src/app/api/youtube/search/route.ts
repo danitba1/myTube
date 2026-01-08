@@ -46,16 +46,20 @@ export async function GET(request: NextRequest) {
     if (preferNew) {
       const threeYearsAgo = new Date();
       threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
-      searchUrl.searchParams.set("publishedAfter", threeYearsAgo.toISOString());
+      // Format as RFC 3339 (YouTube API requirement): YYYY-MM-DDTHH:MM:SSZ
+      const isoDate = threeYearsAgo.toISOString().split('.')[0] + 'Z';
+      searchUrl.searchParams.set("publishedAfter", isoDate);
     }
 
+    console.log("YouTube API URL:", searchUrl.toString().replace(YOUTUBE_API_KEY, "API_KEY_HIDDEN"));
+    
     const searchResponse = await fetch(searchUrl.toString());
     
     if (!searchResponse.ok) {
       const errorData = await searchResponse.json();
-      console.error("YouTube API error:", errorData);
+      console.error("YouTube API error:", JSON.stringify(errorData, null, 2));
       return NextResponse.json(
-        { error: "Failed to fetch from YouTube API" },
+        { error: errorData?.error?.message || "Failed to fetch from YouTube API" },
         { status: searchResponse.status }
       );
     }
