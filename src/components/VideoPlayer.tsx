@@ -70,6 +70,7 @@ export default function VideoPlayer({
   const hasPreviousRef = useRef(hasPrevious);
   const videoRef = useRef(video);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const silentAudioRef = useRef<HTMLAudioElement | null>(null);
   const [isAudioMode, setIsAudioMode] = useState(false);
 
   // Keep refs updated
@@ -166,24 +167,54 @@ export default function VideoPlayer({
     }
   }, []);
 
-  // Toggle Audio-Only Mode (hides video, saves battery)
+  // Start silent audio to keep browser active in background
+  const startSilentAudio = useCallback(() => {
+    if (!silentAudioRef.current) {
+      // Create a silent audio element with a tiny silent MP3 (base64 encoded)
+      const silentAudio = new Audio(
+        "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbAAqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV////////////////////////////////////////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQAAAAAAAAAAaD//////////////////////////////////////////////////////////////////"
+      );
+      silentAudio.loop = true;
+      silentAudio.volume = 0.01; // Very low volume
+      silentAudioRef.current = silentAudio;
+    }
+    
+    silentAudioRef.current.play().catch(err => {
+      console.log('Silent audio play failed:', err);
+    });
+    console.log('Silent audio started - background playback enabled');
+  }, []);
+
+  // Stop silent audio
+  const stopSilentAudio = useCallback(() => {
+    if (silentAudioRef.current) {
+      silentAudioRef.current.pause();
+      silentAudioRef.current.currentTime = 0;
+      console.log('Silent audio stopped');
+    }
+  }, []);
+
+  // Toggle Audio-Only Mode (hides video, enables background playback)
   const toggleAudioMode = useCallback(() => {
     setIsAudioMode(prev => {
       if (!prev) {
-        // Entering audio mode - request wake lock
+        // Entering audio mode - request wake lock and start silent audio
         requestWakeLock();
+        startSilentAudio();
       } else {
-        // Exiting audio mode - release wake lock
+        // Exiting audio mode - release wake lock and stop silent audio
         releaseWakeLock();
+        stopSilentAudio();
       }
       return !prev;
     });
-  }, [requestWakeLock, releaseWakeLock]);
+  }, [requestWakeLock, releaseWakeLock, startSilentAudio, stopSilentAudio]);
 
-  // Auto-request wake lock when playing
+  // Auto-request wake lock and silent audio when in audio mode
   useEffect(() => {
     if (isAudioMode) {
       requestWakeLock();
+      startSilentAudio();
       
       // Re-request wake lock if it gets released (e.g., when visibility changes)
       const handleVisibilityChange = () => {
@@ -196,9 +227,10 @@ export default function VideoPlayer({
       return () => {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
         releaseWakeLock();
+        stopSilentAudio();
       };
     }
-  }, [isAudioMode, requestWakeLock, releaseWakeLock]);
+  }, [isAudioMode, requestWakeLock, releaseWakeLock, startSilentAudio, stopSilentAudio]);
 
   useEffect(() => {
     if (!video) return;
@@ -294,8 +326,8 @@ export default function VideoPlayer({
         {isAudioMode && (
           <Box className={styles.audioModeOverlay}>
             <HeadphonesIcon className={styles.audioModeIcon} />
-            <Typography className={styles.audioModeText}>מצב שמע בלבד</Typography>
-            <Typography className={styles.audioModeSubtext}>המסך יישאר דלוק כדי להמשיך לנגן</Typography>
+            <Typography className={styles.audioModeText}>מצב שמע ברקע</Typography>
+            <Typography className={styles.audioModeSubtext}>המוזיקה תמשיך לנגן גם ברקע</Typography>
           </Box>
         )}
       </Box>
