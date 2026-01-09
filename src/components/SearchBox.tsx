@@ -56,26 +56,25 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
     setQuery("");
   };
 
-  // For full history - replace the entire query
-  const handleFullHistoryClick = (historyItem: string) => {
-    setQuery(historyItem);
-  };
-
-  // For single terms - append with comma
-  const handleSingleTermClick = (term: string) => {
+  // Handle clicking any history item - append to existing query
+  const handleHistoryClick = (item: string) => {
     const currentTerms = query
       .split(",")
       .map((t) => t.trim().toLowerCase())
       .filter((t) => t.length > 0);
 
-    if (currentTerms.includes(term.toLowerCase())) {
+    // Check if this item (or its parts) are already in the query
+    const itemTerms = item.split(",").map((t) => t.trim().toLowerCase()).filter((t) => t.length > 0);
+    const allAlreadyIncluded = itemTerms.every((t) => currentTerms.includes(t));
+    
+    if (allAlreadyIncluded) {
       return; // Already in query
     }
 
     if (query.trim()) {
-      setQuery(query.trim() + ", " + term);
+      setQuery(query.trim() + ", " + item);
     } else {
-      setQuery(term);
+      setQuery(item);
     }
   };
 
@@ -152,7 +151,7 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
                       key={`full-${index}`}
                       label={item}
                       size="small"
-                      onClick={() => handleFullHistoryClick(item)}
+                      onClick={() => handleHistoryClick(item)}
                       onDelete={() => removeFromHistory(item, false)}
                       deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
                       className={styles.fullHistoryChip}
@@ -178,7 +177,7 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
                       key={`single-${index}`}
                       label={item}
                       size="small"
-                      onClick={() => handleSingleTermClick(item)}
+                      onClick={() => handleHistoryClick(item)}
                       onDelete={() => removeFromHistory(item, true)}
                       deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
                       className={styles.singleHistoryChip}
