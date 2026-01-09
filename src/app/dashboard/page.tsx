@@ -20,6 +20,8 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
+const MAX_SEARCH_TERMS = 10;
+
 export default function DashboardPage() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
@@ -27,18 +29,27 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
   
   const { skippedVideoIds, addToSkipList } = useSkippedVideos();
 
   const handleSearch = useCallback(async (query: string, preferNew?: boolean) => {
     if (!query.trim()) return;
 
-    const terms = query
+    let terms = query
       .split(",")
       .map((term) => term.trim())
       .filter((term) => term.length > 0);
 
     if (terms.length === 0) return;
+
+    // Limit to MAX_SEARCH_TERMS and show warning if exceeded
+    if (terms.length > MAX_SEARCH_TERMS) {
+      setWarningMessage(`הרשימה גדולה מדי! רק ${MAX_SEARCH_TERMS} הערכים הראשונים יחופשו.`);
+      terms = terms.slice(0, MAX_SEARCH_TERMS);
+    } else {
+      setWarningMessage(null);
+    }
 
     setSearchTerms(terms);
     setIsLoading(true);
@@ -171,6 +182,10 @@ export default function DashboardPage() {
     setSuccessMessage(null);
   };
 
+  const handleCloseWarning = () => {
+    setWarningMessage(null);
+  };
+
   return (
     <Box className={styles.pageContainer}>
       <Header onSearch={handleSearch} />
@@ -262,6 +277,18 @@ export default function DashboardPage() {
       >
         <Alert onClose={handleCloseSuccess} severity="success">
           {successMessage}
+        </Alert>
+      </Snackbar>
+
+      {/* Warning Snackbar */}
+      <Snackbar
+        open={!!warningMessage}
+        autoHideDuration={6000}
+        onClose={handleCloseWarning}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert onClose={handleCloseWarning} severity="warning">
+          {warningMessage}
         </Alert>
       </Snackbar>
     </Box>
