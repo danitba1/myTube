@@ -43,6 +43,17 @@ export default function DashboardPage() {
 
     if (terms.length === 0) return;
 
+    // Remove duplicates (case-insensitive)
+    const seen = new Set<string>();
+    terms = terms.filter((term) => {
+      const lowerTerm = term.toLowerCase();
+      if (seen.has(lowerTerm)) {
+        return false;
+      }
+      seen.add(lowerTerm);
+      return true;
+    });
+
     // Limit to MAX_SEARCH_TERMS and show warning if exceeded
     if (terms.length > MAX_SEARCH_TERMS) {
       setWarningMessage(`הרשימה גדולה מדי! רק ${MAX_SEARCH_TERMS} הערכים הראשונים יחופשו.`);
