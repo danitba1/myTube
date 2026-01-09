@@ -18,6 +18,7 @@ export const searchHistory = pgTable("search_history", {
   searchQuery: text("search_query").notNull(),
   searchTerms: jsonb("search_terms").$type<string[]>().default([]),
   resultsCount: integer("results_count").default(0),
+  isSingle: boolean("is_single").default(false).notNull(), // true = single term from comma-separated list
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

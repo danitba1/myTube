@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db, searchHistory } from "@/db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 
-// GET - Fetch user's last 15 search history entries
+// GET - Fetch user's search history (both full searches and single terms)
 export async function GET() {
   try {
     const { userId } = await auth();
@@ -15,28 +15,60 @@ export async function GET() {
       );
     }
 
-    // Get last 10 unique search queries (most recent first)
-    const history = await db
+    // Get full searches (isSingle=false) - last 5 unique
+    const fullSearches = await db
       .select()
       .from(searchHistory)
-      .where(eq(searchHistory.clerkUserId, userId))
+      .where(
+        and(
+          eq(searchHistory.clerkUserId, userId),
+          eq(searchHistory.isSingle, false)
+        )
+      )
       .orderBy(desc(searchHistory.createdAt))
-      .limit(50); // Fetch more to ensure we get 10 unique ones
+      .limit(30);
 
-    // Extract unique search queries (most recent first), limit to 10
-    const seen = new Set<string>();
-    const uniqueQueries: string[] = [];
-    
-    for (const entry of history) {
+    const seenFull = new Set<string>();
+    const fullHistory: string[] = [];
+    for (const entry of fullSearches) {
       const query = entry.searchQuery.toLowerCase();
-      if (!seen.has(query)) {
-        seen.add(query);
-        uniqueQueries.push(entry.searchQuery);
-        if (uniqueQueries.length >= 10) break;
+      if (!seenFull.has(query)) {
+        seenFull.add(query);
+        fullHistory.push(entry.searchQuery);
+        if (fullHistory.length >= 5) break;
       }
     }
 
-    return NextResponse.json({ history: uniqueQueries });
+    // Get single terms (isSingle=true) - last 10 unique
+    const singleTerms = await db
+      .select()
+      .from(searchHistory)
+      .where(
+        and(
+          eq(searchHistory.clerkUserId, userId),
+          eq(searchHistory.isSingle, true)
+        )
+      )
+      .orderBy(desc(searchHistory.createdAt))
+      .limit(50);
+
+    const seenSingle = new Set<string>();
+    const singleHistory: string[] = [];
+    for (const entry of singleTerms) {
+      const query = entry.searchQuery.toLowerCase();
+      if (!seenSingle.has(query)) {
+        seenSingle.add(query);
+        singleHistory.push(entry.searchQuery);
+        if (singleHistory.length >= 10) break;
+      }
+    }
+
+    return NextResponse.json({ 
+      fullHistory,    // Last 5 full searches (isSingle=false)
+      singleHistory,  // Last 10 single terms (isSingle=true)
+      // Keep legacy format for backwards compatibility
+      history: fullHistory 
+    });
   } catch (error) {
     console.error("Error fetching search history:", error);
     return NextResponse.json(
@@ -68,7 +100,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Always save every search with timestamp (no deduplication)
+    // 1. Save the full search query with isSingle=false
     const newEntry = await db
       .insert(searchHistory)
       .values({
@@ -76,8 +108,50 @@ export async function POST(request: NextRequest) {
         searchQuery,
         searchTerms: searchTerms || [],
         resultsCount: resultsCount || 0,
+        isSingle: false,
       })
       .returning();
+
+    // 2. If there are multiple terms, save each as a single entry (isSingle=true)
+    const terms: string[] = searchTerms || [];
+    if (terms.length > 1) {
+      for (const term of terms) {
+        const trimmedTerm = term.trim();
+        if (!trimmedTerm) continue;
+
+        // Check if this single term already exists for this user
+        const existing = await db
+          .select()
+          .from(searchHistory)
+          .where(
+            and(
+              eq(searchHistory.clerkUserId, userId),
+              sql`LOWER(${searchHistory.searchQuery}) = LOWER(${trimmedTerm})`,
+              eq(searchHistory.isSingle, true)
+            )
+          )
+          .limit(1);
+
+        if (existing.length > 0) {
+          // Update the date of the existing entry
+          await db
+            .update(searchHistory)
+            .set({ createdAt: new Date() })
+            .where(eq(searchHistory.id, existing[0].id));
+        } else {
+          // Insert new single term entry
+          await db
+            .insert(searchHistory)
+            .values({
+              clerkUserId: userId,
+              searchQuery: trimmedTerm,
+              searchTerms: [trimmedTerm],
+              resultsCount: 0,
+              isSingle: true,
+            });
+        }
+      }
+    }
 
     return NextResponse.json({ success: true, entry: newEntry[0] });
   } catch (error) {

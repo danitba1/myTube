@@ -16,6 +16,7 @@ import {
   Clear as ClearIcon,
   History as HistoryIcon,
   Close as CloseIcon,
+  Person as PersonIcon,
 } from "@mui/icons-material";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import styles from "./SearchBox.module.css";
@@ -28,7 +29,8 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
   const [query, setQuery] = useState("");
   const [preferNew, setPreferNew] = useState(false);
   const { 
-    searchHistory, 
+    fullHistory,
+    singleHistory,
     isLoading: isHistoryLoading,
     addToHistory, 
     removeFromHistory, 
@@ -38,7 +40,8 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
   const handleSearch = () => {
     if (onSearch && query.trim()) {
       const trimmedQuery = query.trim();
-      addToHistory(trimmedQuery, undefined, undefined, true);
+      const terms = trimmedQuery.split(",").map(t => t.trim()).filter(t => t.length > 0);
+      addToHistory(trimmedQuery, terms, undefined, true);
       onSearch(trimmedQuery, preferNew);
     }
   };
@@ -53,20 +56,26 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
     setQuery("");
   };
 
-  const handleHistoryClick = (historyItem: string) => {
+  // For full history - replace the entire query
+  const handleFullHistoryClick = (historyItem: string) => {
+    setQuery(historyItem);
+  };
+
+  // For single terms - append with comma
+  const handleSingleTermClick = (term: string) => {
     const currentTerms = query
       .split(",")
       .map((t) => t.trim().toLowerCase())
       .filter((t) => t.length > 0);
 
-    if (currentTerms.includes(historyItem.toLowerCase())) {
-      return;
+    if (currentTerms.includes(term.toLowerCase())) {
+      return; // Already in query
     }
 
     if (query.trim()) {
-      setQuery(query.trim() + ", " + historyItem);
+      setQuery(query.trim() + ", " + term);
     } else {
-      setQuery(historyItem);
+      setQuery(term);
     }
   };
 
@@ -114,13 +123,13 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
         <Box className={styles.historyLoading}>
           <CircularProgress size={18} />
         </Box>
-      ) : searchHistory.length > 0 && (
+      ) : (fullHistory.length > 0 || singleHistory.length > 0) && (
         <Box className={styles.historyContainer}>
           <Box className={styles.historyHeader}>
             <Box className={styles.historyTitleWrapper}>
               <HistoryIcon className={styles.historyIcon} />
               <Typography className={styles.historyTitle}>
-                חיפושים אחרונים
+                היסטוריית חיפושים
               </Typography>
             </Box>
             <button
@@ -130,21 +139,57 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
               נקה הכל
             </button>
           </Box>
-          <Box className={styles.historyChips}>
-            {searchHistory.map((item, index) => (
-              <Chip
-                key={index}
-                label={item}
-                size="small"
-                onClick={() => handleHistoryClick(item)}
-                onDelete={() => removeFromHistory(item)}
-                deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
-                className={styles.historyChip}
-                classes={{
-                  label: styles.chipLabel,
-                }}
-              />
-            ))}
+
+          {/* Two columns: Full searches (right) and Single terms (left) */}
+          <Box className={styles.historyColumns}>
+            {/* Right side - Full searches */}
+            {fullHistory.length > 0 && (
+              <Box className={styles.historyColumn}>
+                <Typography className={styles.columnTitle}>חיפושים מלאים</Typography>
+                <Box className={styles.historyChips}>
+                  {fullHistory.map((item, index) => (
+                    <Chip
+                      key={`full-${index}`}
+                      label={item}
+                      size="small"
+                      onClick={() => handleFullHistoryClick(item)}
+                      onDelete={() => removeFromHistory(item, false)}
+                      deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
+                      className={styles.fullHistoryChip}
+                      classes={{
+                        label: styles.chipLabel,
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+
+            {/* Left side - Single terms */}
+            {singleHistory.length > 0 && (
+              <Box className={styles.historyColumn}>
+                <Typography className={styles.columnTitle}>
+                  <PersonIcon className={styles.columnIcon} />
+                  זמרים/נושאים
+                </Typography>
+                <Box className={styles.historyChips}>
+                  {singleHistory.map((item, index) => (
+                    <Chip
+                      key={`single-${index}`}
+                      label={item}
+                      size="small"
+                      onClick={() => handleSingleTermClick(item)}
+                      onDelete={() => removeFromHistory(item, true)}
+                      deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
+                      className={styles.singleHistoryChip}
+                      classes={{
+                        label: styles.chipLabel,
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
           </Box>
         </Box>
       )}

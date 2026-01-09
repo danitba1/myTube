@@ -256,3 +256,84 @@
   color: var(--color-primary);
 }
 
+/* Two-column history layout */
+.historyColumns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+@media (min-width: 600px) {
+  .historyColumns {
+    flex-direction: row-reverse; /* Right side first in RTL */
+    gap: var(--spacing-lg);
+  }
+}
+
+.historyColumn {
+  flex: 1;
+  min-width: 0;
+}
+
+.columnTitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+@media (min-width: 600px) {
+  .columnTitle {
+    font-size: 0.75rem;
+  }
+}
+
+.columnIcon {
+  font-size: 14px;
+}
+
+/* Full history chips - Blue theme */
+.fullHistoryChip {
+  background-color: #e3f2fd;
+  border: 1px solid #90caf9;
+  transition: all var(--transition-base);
+  cursor: pointer;
+  height: 24px;
+  color: #1565c0;
+}
+
+@media (min-width: 600px) {
+  .fullHistoryChip {
+    height: 28px;
+  }
+}
+
+.fullHistoryChip:hover {
+  background-color: #bbdefb;
+  border-color: #1976d2;
+}
+
+/* Single term chips - Purple/Violet theme */
+.singleHistoryChip {
+  background-color: #f3e5f5;
+  border: 1px solid #ce93d8;
+  transition: all var(--transition-base);
+  cursor: pointer;
+  height: 24px;
+  color: #7b1fa2;
+}
+
+@media (min-width: 600px) {
+  .singleHistoryChip {
+    height: 28px;
+  }
+}
+
+.singleHistoryChip:hover {
+  background-color: #e1bee7;
+  border-color: #9c27b0;
+}
+
