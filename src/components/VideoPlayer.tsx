@@ -66,6 +66,7 @@ export default function VideoPlayer({
   const playerRef = useRef<any>(null);
   const onNextRef = useRef(onNext);
   const onPreviousRef = useRef(onPrevious);
+  const onAlwaysSkipRef = useRef(onAlwaysSkip);
   const hasNextRef = useRef(hasNext);
   const hasPreviousRef = useRef(hasPrevious);
   const videoRef = useRef(video);
@@ -77,10 +78,11 @@ export default function VideoPlayer({
   useEffect(() => {
     onNextRef.current = onNext;
     onPreviousRef.current = onPrevious;
+    onAlwaysSkipRef.current = onAlwaysSkip;
     hasNextRef.current = hasNext;
     hasPreviousRef.current = hasPrevious;
     videoRef.current = video;
-  }, [onNext, onPrevious, hasNext, hasPrevious, video]);
+  }, [onNext, onPrevious, onAlwaysSkip, hasNext, hasPrevious, video]);
 
   // Setup Media Session API for lock screen / notification controls
   useEffect(() => {
@@ -142,7 +144,7 @@ export default function VideoPlayer({
     }
   }, []);
 
-  // Handle YouTube player errors - skip to next video
+  // Handle YouTube player errors - mark as always skip and move to next
   const handlePlayerError = useCallback((event: { data: number }) => {
     // YouTube error codes:
     // 2 - Invalid video ID
@@ -151,8 +153,12 @@ export default function VideoPlayer({
     // 101/150 - Video not allowed for embedded playback
     console.warn(`YouTube player error (code ${event.data}) for video: ${videoRef.current?.title}`);
     
-    // Skip to next video if available
-    if (hasNextRef.current && onNextRef.current) {
+    // Mark this video as "always skip" so it won't appear in future searches
+    if (onAlwaysSkipRef.current) {
+      console.log('Marking video as always skip due to error');
+      onAlwaysSkipRef.current();
+    } else if (hasNextRef.current && onNextRef.current) {
+      // Fallback: just skip to next if onAlwaysSkip not available
       console.log('Skipping to next video due to error');
       setTimeout(() => {
         onNextRef.current?.();
@@ -281,8 +287,10 @@ export default function VideoPlayer({
         });
       } catch (err) {
         console.error('Failed to create YouTube player:', err);
-        // Skip to next video on creation error
-        if (hasNextRef.current && onNextRef.current) {
+        // Mark as always skip and move to next video
+        if (onAlwaysSkipRef.current) {
+          onAlwaysSkipRef.current();
+        } else if (hasNextRef.current && onNextRef.current) {
           setTimeout(() => {
             onNextRef.current?.();
           }, 500);
