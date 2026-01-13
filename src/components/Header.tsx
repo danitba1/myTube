@@ -25,9 +25,10 @@ const SearchBox = dynamic(() => import("./SearchBox"), {
 
 interface HeaderProps {
   onSearch?: (query: string, preferNew?: boolean) => void;
+  onPlaylistSelect?: (playlistId: string) => void;
 }
 
-export default function Header({ onSearch }: HeaderProps) {
+export default function Header({ onSearch, onPlaylistSelect }: HeaderProps) {
   return (
     <AppBar position="sticky" elevation={0} className={styles.appBar}>
       <Toolbar className={styles.toolbar}>
@@ -43,7 +44,7 @@ export default function Header({ onSearch }: HeaderProps) {
 
         {/* Center Section - Search (Desktop) */}
         <Box className={styles.searchSectionDesktop}>
-          <SearchBox onSearch={onSearch} />
+          <SearchBox onSearch={onSearch} onPlaylistSelect={onPlaylistSelect} />
         </Box>
 
         {/* Right Section - Actions */}
@@ -73,7 +74,7 @@ export default function Header({ onSearch }: HeaderProps) {
 
       {/* Mobile Search - Always visible on mobile */}
       <Box className={styles.mobileSearchSection}>
-        <SearchBox onSearch={onSearch} />
+        <SearchBox onSearch={onSearch} onPlaylistSelect={onPlaylistSelect} />
       </Box>
     </AppBar>
   );

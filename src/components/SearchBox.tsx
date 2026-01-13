@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Paper,
   IconButton,
@@ -17,17 +17,26 @@ import {
   History as HistoryIcon,
   Close as CloseIcon,
   Person as PersonIcon,
+  QueueMusic as PlaylistIcon,
 } from "@mui/icons-material";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import styles from "./SearchBox.module.css";
 
-interface SearchBoxProps {
-  onSearch?: (query: string, preferNew?: boolean) => void;
+interface Playlist {
+  id: string;
+  name: string;
 }
 
-export default function SearchBox({ onSearch }: SearchBoxProps) {
+interface SearchBoxProps {
+  onSearch?: (query: string, preferNew?: boolean) => void;
+  onPlaylistSelect?: (playlistId: string) => void;
+}
+
+export default function SearchBox({ onSearch, onPlaylistSelect }: SearchBoxProps) {
   const [query, setQuery] = useState("");
   const [preferNew, setPreferNew] = useState(false);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(true);
   const { 
     fullHistory,
     singleHistory,
@@ -36,6 +45,24 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
     removeFromHistory, 
     clearHistory 
   } = useSearchHistory();
+
+  // Fetch playlists
+  useEffect(() => {
+    const fetchPlaylists = async () => {
+      try {
+        const response = await fetch("/api/user/playlists");
+        if (response.ok) {
+          const data = await response.json();
+          setPlaylists(data.playlists || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch playlists:", error);
+      } finally {
+        setIsLoadingPlaylists(false);
+      }
+    };
+    fetchPlaylists();
+  }, []);
 
   const handleSearch = () => {
     if (onSearch && query.trim()) {
@@ -116,6 +143,34 @@ export default function SearchBox({ onSearch }: SearchBoxProps) {
         label="העדפה לסרטונים חדשים"
         className={styles.preferNewLabel}
       />
+
+      {/* Playlists Section */}
+      {!isLoadingPlaylists && playlists.length > 0 && (
+        <Box className={styles.playlistsContainer}>
+          <Box className={styles.playlistsHeader}>
+            <Box className={styles.historyTitleWrapper}>
+              <PlaylistIcon className={styles.playlistHeaderIcon} />
+              <Typography className={styles.historyTitle}>
+                הפלייליסטים שלי
+              </Typography>
+            </Box>
+          </Box>
+          <Box className={styles.playlistChips}>
+            {playlists.map((playlist) => (
+              <Chip
+                key={playlist.id}
+                label={playlist.name}
+                size="small"
+                onClick={() => onPlaylistSelect?.(playlist.id)}
+                className={styles.playlistChip}
+                classes={{
+                  label: styles.chipLabel,
+                }}
+              />
+            ))}
+          </Box>
+        </Box>
+      )}
 
       {/* Search History */}
       {isHistoryLoading ? (

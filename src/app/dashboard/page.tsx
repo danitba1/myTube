@@ -197,9 +197,62 @@ export default function DashboardPage() {
     setWarningMessage(null);
   };
 
+  const handlePlaylistSelect = useCallback(async (playlistId: string) => {
+    setIsLoading(true);
+    setError(null);
+    setWarningMessage(null);
+    setSearchTerms([]);
+
+    try {
+      const response = await fetch(`/api/user/playlists/videos?playlistId=${playlistId}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to load playlist");
+      }
+
+      const data = await response.json();
+      const playlistVideos: Video[] = (data.videos || []).map((v: {
+        videoId: string;
+        videoTitle: string;
+        channelName?: string;
+        channelId?: string;
+        thumbnailUrl?: string;
+        duration?: string;
+      }) => ({
+        id: v.videoId,
+        title: v.videoTitle,
+        channelName: v.channelName || "",
+        channelId: v.channelId || "",
+        thumbnailUrl: v.thumbnailUrl || "",
+        duration: v.duration || "",
+      }));
+
+      // Filter out skipped videos
+      const filteredVideos = playlistVideos.filter(
+        (video) => !skippedVideoIds.includes(video.id)
+      );
+
+      setVideos(filteredVideos);
+
+      if (filteredVideos.length > 0) {
+        setSelectedVideo(filteredVideos[0]);
+      } else {
+        setSelectedVideo(null);
+      }
+    } catch (err) {
+      console.error("Playlist load error:", err);
+      setError(err instanceof Error ? err.message : "שגיאה בטעינת הפלייליסט");
+      setVideos([]);
+      setSelectedVideo(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [skippedVideoIds]);
+
   return (
     <Box className={styles.pageContainer}>
-      <Header onSearch={handleSearch} />
+      <Header onSearch={handleSearch} onPlaylistSelect={handlePlaylistSelect} />
 
       <Container maxWidth={false} className={styles.mainContainer}>
         <Box className={styles.contentWrapper}>
