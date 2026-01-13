@@ -142,6 +142,24 @@ export default function VideoPlayer({
     }
   }, []);
 
+  // Handle YouTube player errors - skip to next video
+  const handlePlayerError = useCallback((event: { data: number }) => {
+    // YouTube error codes:
+    // 2 - Invalid video ID
+    // 5 - HTML5 player error
+    // 100 - Video not found (removed or private)
+    // 101/150 - Video not allowed for embedded playback
+    console.warn(`YouTube player error (code ${event.data}) for video: ${videoRef.current?.title}`);
+    
+    // Skip to next video if available
+    if (hasNextRef.current && onNextRef.current) {
+      console.log('Skipping to next video due to error');
+      setTimeout(() => {
+        onNextRef.current?.();
+      }, 500);
+    }
+  }, []);
+
   // Request Wake Lock to keep device awake during playback
   const requestWakeLock = useCallback(async () => {
     if ('wakeLock' in navigator) {
@@ -248,17 +266,28 @@ export default function VideoPlayer({
       const playerElement = document.getElementById("youtube-player");
       if (!playerElement) return;
 
-      playerRef.current = new window.YT.Player("youtube-player", {
-        videoId: video.id,
-        events: {
-          onStateChange: handleStateChange,
-        },
-        playerVars: {
-          autoplay: 1,
-          enablejsapi: 1,
-          playsinline: 1, // Important for iOS to allow inline playback
-        },
-      });
+      try {
+        playerRef.current = new window.YT.Player("youtube-player", {
+          videoId: video.id,
+          events: {
+            onStateChange: handleStateChange,
+            onError: handlePlayerError,
+          },
+          playerVars: {
+            autoplay: 1,
+            enablejsapi: 1,
+            playsinline: 1, // Important for iOS to allow inline playback
+          },
+        });
+      } catch (err) {
+        console.error('Failed to create YouTube player:', err);
+        // Skip to next video on creation error
+        if (hasNextRef.current && onNextRef.current) {
+          setTimeout(() => {
+            onNextRef.current?.();
+          }, 500);
+        }
+      }
     };
 
     if (!window.YT || !window.YT.Player) {
@@ -288,7 +317,7 @@ export default function VideoPlayer({
         playerRef.current = null;
       }
     };
-  }, [video?.id, handleStateChange]);
+  }, [video?.id, handleStateChange, handlePlayerError]);
 
   if (isLoading) {
     return (
