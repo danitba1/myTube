@@ -34,7 +34,7 @@ interface SearchBoxProps {
 
 export default function SearchBox({ onSearch, onPlaylistSelect }: SearchBoxProps) {
   const [query, setQuery] = useState("");
-  const [preferNew, setPreferNew] = useState(false);
+  const [preferNew, setPreferNew] = useState(true);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(true);
   const { 

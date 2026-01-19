@@ -72,6 +72,8 @@ export default function VideoPlayer({
   const videoRef = useRef(video);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const silentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const playbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasStartedPlayingRef = useRef(false);
   const [isAudioMode, setIsAudioMode] = useState(false);
 
   // Keep refs updated
@@ -136,6 +138,15 @@ export default function VideoPlayer({
       }
     }
 
+    // Video started playing - clear the timeout and mark as started
+    if (event.data === 1) { // PLAYING
+      hasStartedPlayingRef.current = true;
+      if (playbackTimeoutRef.current) {
+        clearTimeout(playbackTimeoutRef.current);
+        playbackTimeoutRef.current = null;
+      }
+    }
+
     // Auto-play next when video ends
     if (event.data === 0 && hasNextRef.current && onNextRef.current) {
       setTimeout(() => {
@@ -144,7 +155,24 @@ export default function VideoPlayer({
     }
   }, []);
 
-  // Handle YouTube player errors - mark as always skip and move to next
+  // Skip to next video immediately (for error cases)
+  const skipToNextVideo = useCallback(() => {
+    // Clear any pending timeout
+    if (playbackTimeoutRef.current) {
+      clearTimeout(playbackTimeoutRef.current);
+      playbackTimeoutRef.current = null;
+    }
+    
+    // Mark this video as "always skip" so it won't appear in future searches
+    if (onAlwaysSkipRef.current) {
+      onAlwaysSkipRef.current();
+    } else if (hasNextRef.current && onNextRef.current) {
+      // Fallback: just skip to next if onAlwaysSkip not available
+      onNextRef.current();
+    }
+  }, []);
+
+  // Handle YouTube player errors - mark as always skip and move to next immediately
   const handlePlayerError = useCallback((event: { data: number }) => {
     // YouTube error codes:
     // 2 - Invalid video ID
@@ -153,18 +181,9 @@ export default function VideoPlayer({
     // 101/150 - Video not allowed for embedded playback
     console.warn(`YouTube player error (code ${event.data}) for video: ${videoRef.current?.title}`);
     
-    // Mark this video as "always skip" so it won't appear in future searches
-    if (onAlwaysSkipRef.current) {
-      console.log('Marking video as always skip due to error');
-      onAlwaysSkipRef.current();
-    } else if (hasNextRef.current && onNextRef.current) {
-      // Fallback: just skip to next if onAlwaysSkip not available
-      console.log('Skipping to next video due to error');
-      setTimeout(() => {
-        onNextRef.current?.();
-      }, 500);
-    }
-  }, []);
+    // Skip immediately without showing error
+    skipToNextVideo();
+  }, [skipToNextVideo]);
 
   // Request Wake Lock to keep device awake during playback
   const requestWakeLock = useCallback(async () => {
@@ -259,6 +278,15 @@ export default function VideoPlayer({
   useEffect(() => {
     if (!video) return;
 
+    // Reset playback tracking for new video
+    hasStartedPlayingRef.current = false;
+    
+    // Clear any existing timeout
+    if (playbackTimeoutRef.current) {
+      clearTimeout(playbackTimeoutRef.current);
+      playbackTimeoutRef.current = null;
+    }
+
     const createPlayer = () => {
       if (playerRef.current) {
         try {
@@ -285,16 +313,18 @@ export default function VideoPlayer({
             playsinline: 1, // Important for iOS to allow inline playback
           },
         });
+        
+        // Set a timeout to skip if video doesn't start playing within 10 seconds
+        playbackTimeoutRef.current = setTimeout(() => {
+          if (!hasStartedPlayingRef.current) {
+            console.warn(`Video failed to start within 10 seconds: ${videoRef.current?.title}`);
+            skipToNextVideo();
+          }
+        }, 10000);
+        
       } catch (err) {
         console.error('Failed to create YouTube player:', err);
-        // Mark as always skip and move to next video
-        if (onAlwaysSkipRef.current) {
-          onAlwaysSkipRef.current();
-        } else if (hasNextRef.current && onNextRef.current) {
-          setTimeout(() => {
-            onNextRef.current?.();
-          }, 500);
-        }
+        skipToNextVideo();
       }
     };
 
@@ -316,6 +346,11 @@ export default function VideoPlayer({
     }
 
     return () => {
+      // Clear timeout on cleanup
+      if (playbackTimeoutRef.current) {
+        clearTimeout(playbackTimeoutRef.current);
+        playbackTimeoutRef.current = null;
+      }
       if (playerRef.current) {
         try {
           playerRef.current.destroy();
@@ -325,7 +360,7 @@ export default function VideoPlayer({
         playerRef.current = null;
       }
     };
-  }, [video?.id, handleStateChange, handlePlayerError]);
+  }, [video?.id, handleStateChange, handlePlayerError, skipToNextVideo]);
 
   if (isLoading) {
     return (

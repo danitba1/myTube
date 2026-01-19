@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Box, Container, Typography, Alert, Snackbar, Chip, Stack, IconButton, Tooltip } from "@mui/material";
 import { Shuffle as ShuffleIcon } from "@mui/icons-material";
 import Header from "@/components/Header";
@@ -8,6 +8,7 @@ import VideoPlayer from "@/components/VideoPlayer";
 import VideoList from "@/components/VideoList";
 import { Video } from "@/types/youtube";
 import { useSkippedVideos } from "@/hooks/useSkippedVideos";
+import { useSearchHistory } from "@/hooks/useSearchHistory";
 import styles from "./page.module.css";
 
 // Fisher-Yates shuffle algorithm
@@ -32,6 +33,9 @@ export default function DashboardPage() {
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   
   const { skippedVideoIds, addToSkipList } = useSkippedVideos();
+  const { fullHistory, isLoading: isHistoryLoading } = useSearchHistory();
+  const hasAutoSearched = useRef(false);
+  const handleSearchRef = useRef<(query: string, preferNew?: boolean) => void>(() => {});
 
   const handleSearch = useCallback(async (query: string, preferNew?: boolean) => {
     if (!query.trim()) return;
@@ -138,6 +142,21 @@ export default function DashboardPage() {
       setIsLoading(false);
     }
   }, [skippedVideoIds]);
+
+  // Keep ref updated with latest handleSearch
+  useEffect(() => {
+    handleSearchRef.current = handleSearch;
+  }, [handleSearch]);
+
+  // Auto-search last query on app load
+  useEffect(() => {
+    if (!isHistoryLoading && !hasAutoSearched.current && fullHistory.length > 0) {
+      hasAutoSearched.current = true;
+      const lastSearch = fullHistory[0];
+      // Trigger search with preferNew=true (default)
+      handleSearchRef.current(lastSearch, true);
+    }
+  }, [isHistoryLoading, fullHistory]);
 
   const handleVideoSelect = useCallback((video: Video) => {
     setSelectedVideo(video);
