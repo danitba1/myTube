@@ -471,6 +471,18 @@ export default function VideoPlayer({
         )}
       </Box>
 
+      {/* Floating Next Button - Mobile Only */}
+      {hasNext && (
+        <Button
+          variant="contained"
+          onClick={onNext}
+          className={styles.floatingNextButton}
+          aria-label="הבא"
+        >
+          <SkipNextIcon className={styles.floatingNextIcon} />
+        </Button>
+      )}
+
       {/* Navigation Buttons */}
       <Box className={styles.navigationButtons}>
         <Button

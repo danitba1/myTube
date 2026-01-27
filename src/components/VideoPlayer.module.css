@@ -119,6 +119,54 @@
   padding: 0 var(--spacing-md);
 }
 
+/* Floating Next Button - Mobile Only */
+.floatingNextButton {
+  display: flex;
+  position: fixed;
+  bottom: 50%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  z-index: 1000;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  box-shadow: 0 6px 20px rgba(25, 118, 210, 0.5), 0 0 0 4px rgba(25, 118, 210, 0.2);
+  min-width: unset;
+  padding: 0;
+  animation: floatPulse 2s ease-in-out infinite;
+}
+
+.floatingNextButton:hover {
+  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+  box-shadow: 0 8px 25px rgba(25, 118, 210, 0.6), 0 0 0 6px rgba(25, 118, 210, 0.3);
+}
+
+.floatingNextButton:active {
+  transform: translate(-50%, 50%) scale(0.95);
+}
+
+@keyframes floatPulse {
+  0%, 100% { 
+    box-shadow: 0 6px 20px rgba(25, 118, 210, 0.5), 0 0 0 4px rgba(25, 118, 210, 0.2);
+  }
+  50% { 
+    box-shadow: 0 8px 25px rgba(25, 118, 210, 0.6), 0 0 0 8px rgba(25, 118, 210, 0.15);
+  }
+}
+
+.floatingNextIcon {
+  font-size: 48px !important;
+  color: white;
+}
+
+/* Hide floating button on desktop */
+@media (min-width: 600px) {
+  .floatingNextButton {
+    display: none;
+  }
+}
+
 /* Navigation Buttons */
 .navigationButtons {
   display: flex;
