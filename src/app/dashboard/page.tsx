@@ -22,6 +22,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 const MAX_SEARCH_TERMS = 10;
+const MAX_FAVOURITES_TERMS = 20;
 
 export default function DashboardPage() {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -35,9 +36,9 @@ export default function DashboardPage() {
   const { skippedVideoIds, addToSkipList } = useSkippedVideos();
   const { fullHistory, isLoading: isHistoryLoading } = useSearchHistory();
   const hasAutoSearched = useRef(false);
-  const handleSearchRef = useRef<(query: string, preferNew?: boolean) => void>(() => {});
+  const handleSearchRef = useRef<(query: string, preferNew?: boolean, isFavourites?: boolean) => void>(() => {});
 
-  const handleSearch = useCallback(async (query: string, preferNew?: boolean) => {
+  const handleSearch = useCallback(async (query: string, preferNew?: boolean, isFavourites?: boolean) => {
     if (!query.trim()) return;
 
     let terms = query
@@ -58,10 +59,13 @@ export default function DashboardPage() {
       return true;
     });
 
-    // Limit to MAX_SEARCH_TERMS and show warning if exceeded
-    if (terms.length > MAX_SEARCH_TERMS) {
-      setWarningMessage(`הרשימה גדולה מדי! רק ${MAX_SEARCH_TERMS} הערכים הראשונים יחופשו.`);
-      terms = terms.slice(0, MAX_SEARCH_TERMS);
+    // Use higher limit for favourites, regular limit otherwise
+    const maxTerms = isFavourites ? MAX_FAVOURITES_TERMS : MAX_SEARCH_TERMS;
+    
+    // Limit to max terms and show warning if exceeded
+    if (terms.length > maxTerms) {
+      setWarningMessage(`הרשימה גדולה מדי! רק ${maxTerms} הערכים הראשונים יחופשו.`);
+      terms = terms.slice(0, maxTerms);
     } else {
       setWarningMessage(null);
     }

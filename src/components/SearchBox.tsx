@@ -30,7 +30,7 @@ interface Playlist {
 }
 
 interface SearchBoxProps {
-  onSearch?: (query: string, preferNew?: boolean) => void;
+  onSearch?: (query: string, preferNew?: boolean, isFavourites?: boolean) => void;
   onPlaylistSelect?: (playlistId: string) => void;
 }
 
@@ -71,9 +71,9 @@ export default function SearchBox({ onSearch, onPlaylistSelect }: SearchBoxProps
           
           const combinedQuery = uniqueFavourites.join(", ");
           setQuery(combinedQuery);
-          // Also trigger the search immediately
+          // Also trigger the search immediately with isFavourites=true to bypass 10-term limit
           if (onSearch) {
-            onSearch(combinedQuery, preferNew);
+            onSearch(combinedQuery, preferNew, true);
           }
         }
       }
