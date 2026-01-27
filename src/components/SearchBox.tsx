@@ -58,7 +58,18 @@ export default function SearchBox({ onSearch, onPlaylistSelect }: SearchBoxProps
         const data = await response.json();
         const favourites: string[] = data.favourites || [];
         if (favourites.length > 0) {
-          const combinedQuery = favourites.join(", ");
+          // Remove duplicates (case-insensitive) before sending to search
+          const seen = new Set<string>();
+          const uniqueFavourites = favourites.filter((term) => {
+            const lowerTerm = term.toLowerCase().trim();
+            if (seen.has(lowerTerm)) {
+              return false;
+            }
+            seen.add(lowerTerm);
+            return true;
+          });
+          
+          const combinedQuery = uniqueFavourites.join(", ");
           setQuery(combinedQuery);
           // Also trigger the search immediately
           if (onSearch) {
