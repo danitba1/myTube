@@ -118,24 +118,26 @@ export default function DashboardPage() {
         setSelectedVideo(null);
       }
 
-      // Save search to history
-      try {
-        const historyResponse = await fetch("/api/user/search-history", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            searchQuery: query,
-            searchTerms: terms,
-            resultsCount: shuffledVideos.length,
-          }),
-        });
-        
-        if (!historyResponse.ok) {
-          const errorData = await historyResponse.json().catch(() => ({}));
-          console.error("Failed to save search history:", historyResponse.status, errorData);
+      // Save search to history (skip for favourites searches)
+      if (!isFavourites) {
+        try {
+          const historyResponse = await fetch("/api/user/search-history", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              searchQuery: query,
+              searchTerms: terms,
+              resultsCount: shuffledVideos.length,
+            }),
+          });
+          
+          if (!historyResponse.ok) {
+            const errorData = await historyResponse.json().catch(() => ({}));
+            console.error("Failed to save search history:", historyResponse.status, errorData);
+          }
+        } catch (saveError) {
+          console.error("Failed to save search history:", saveError);
         }
-      } catch (saveError) {
-        console.error("Failed to save search history:", saveError);
       }
     } catch (err) {
       console.error("Search error:", err);
