@@ -10,6 +10,7 @@ import {
   CircularProgress,
   Checkbox,
   FormControlLabel,
+  Button,
 } from "@mui/material";
 import { 
   Search as SearchIcon, 
@@ -18,6 +19,7 @@ import {
   Close as CloseIcon,
   Person as PersonIcon,
   QueueMusic as PlaylistIcon,
+  Favorite as FavoriteIcon,
 } from "@mui/icons-material";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import styles from "./SearchBox.module.css";
@@ -37,6 +39,7 @@ export default function SearchBox({ onSearch, onPlaylistSelect }: SearchBoxProps
   const [preferNew, setPreferNew] = useState(true);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(true);
+  const [isLoadingFavourites, setIsLoadingFavourites] = useState(false);
   const { 
     fullHistory,
     singleHistory,
@@ -45,6 +48,30 @@ export default function SearchBox({ onSearch, onPlaylistSelect }: SearchBoxProps
     removeFromHistory, 
     clearHistory 
   } = useSearchHistory();
+
+  // Handle "My Recent Favourites" button click
+  const handleRecentFavourites = async () => {
+    setIsLoadingFavourites(true);
+    try {
+      const response = await fetch("/api/user/search-history?favourites=true&limit=20");
+      if (response.ok) {
+        const data = await response.json();
+        const favourites: string[] = data.favourites || [];
+        if (favourites.length > 0) {
+          const combinedQuery = favourites.join(", ");
+          setQuery(combinedQuery);
+          // Also trigger the search immediately
+          if (onSearch) {
+            onSearch(combinedQuery, preferNew);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch recent favourites:", error);
+    } finally {
+      setIsLoadingFavourites(false);
+    }
+  };
 
   // Fetch playlists
   useEffect(() => {
@@ -144,33 +171,47 @@ export default function SearchBox({ onSearch, onPlaylistSelect }: SearchBoxProps
         className={styles.preferNewLabel}
       />
 
-      {/* Playlists Section */}
-      {!isLoadingPlaylists && playlists.length > 0 && (
-        <Box className={styles.playlistsContainer}>
-          <Box className={styles.playlistsHeader}>
-            <Box className={styles.historyTitleWrapper}>
-              <PlaylistIcon className={styles.playlistHeaderIcon} />
-              <Typography className={styles.historyTitle}>
-                הפלייליסטים שלי
-              </Typography>
+      {/* Quick Actions - Playlists & Favourites */}
+      <Box className={styles.quickActionsContainer}>
+        {/* My Recent Favourites Button */}
+        <Button
+          variant="contained"
+          startIcon={isLoadingFavourites ? <CircularProgress size={16} color="inherit" /> : <FavoriteIcon />}
+          onClick={handleRecentFavourites}
+          disabled={isLoadingFavourites}
+          className={styles.favouritesButton}
+        >
+          המועדפים שלי
+        </Button>
+
+        {/* Playlists Section */}
+        {!isLoadingPlaylists && playlists.length > 0 && (
+          <Box className={styles.playlistsContainer}>
+            <Box className={styles.playlistsHeader}>
+              <Box className={styles.historyTitleWrapper}>
+                <PlaylistIcon className={styles.playlistHeaderIcon} />
+                <Typography className={styles.historyTitle}>
+                  הפלייליסטים שלי
+                </Typography>
+              </Box>
+            </Box>
+            <Box className={styles.playlistChips}>
+              {playlists.map((playlist) => (
+                <Chip
+                  key={playlist.id}
+                  label={playlist.name}
+                  size="small"
+                  onClick={() => onPlaylistSelect?.(playlist.id)}
+                  className={styles.playlistChip}
+                  classes={{
+                    label: styles.chipLabel,
+                  }}
+                />
+              ))}
             </Box>
           </Box>
-          <Box className={styles.playlistChips}>
-            {playlists.map((playlist) => (
-              <Chip
-                key={playlist.id}
-                label={playlist.name}
-                size="small"
-                onClick={() => onPlaylistSelect?.(playlist.id)}
-                className={styles.playlistChip}
-                classes={{
-                  label: styles.chipLabel,
-                }}
-              />
-            ))}
-          </Box>
-        </Box>
-      )}
+        )}
+      </Box>
 
       {/* Search History */}
       {isHistoryLoading ? (

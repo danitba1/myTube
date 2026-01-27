@@ -337,8 +337,11 @@
   border-color: #9c27b0;
 }
 
-/* Playlists Section */
-.playlistsContainer {
+/* Quick Actions Container */
+.quickActionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
   margin-top: var(--spacing-sm);
   padding-inline: var(--spacing-xs);
   padding-bottom: var(--spacing-sm);
@@ -346,9 +349,52 @@
 }
 
 @media (min-width: 600px) {
-  .playlistsContainer {
+  .quickActionsContainer {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--spacing-md);
     padding-inline: var(--spacing-sm);
   }
+}
+
+/* My Recent Favourites Button - Orange/Coral theme */
+.favouritesButton {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+  color: white;
+  font-weight: 600;
+  font-size: var(--font-size-xs);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  text-transform: none;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+  transition: all var(--transition-base);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (min-width: 600px) {
+  .favouritesButton {
+    font-size: var(--font-size-sm);
+    padding: 8px 16px;
+  }
+}
+
+.favouritesButton:hover {
+  background: linear-gradient(135deg, #ff5252 0%, #ff7043 100%);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+  transform: translateY(-1px);
+}
+
+.favouritesButton:disabled {
+  background: linear-gradient(135deg, #ccc 0%, #aaa 100%);
+  box-shadow: none;
+  transform: none;
+}
+
+/* Playlists Section */
+.playlistsContainer {
+  flex: 1;
+  min-width: 0;
 }
 
 .playlistsHeader {

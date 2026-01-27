@@ -4,7 +4,7 @@ import { db, searchHistory } from "@/db";
 import { eq, desc, and, sql } from "drizzle-orm";
 
 // GET - Fetch user's search history (both full searches and single terms)
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
 
@@ -13,6 +13,38 @@ export async function GET() {
         { error: "Unauthorized" },
         { status: 401 }
       );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const favouritesOnly = searchParams.get("favourites") === "true";
+    const favouritesLimit = parseInt(searchParams.get("limit") || "20", 10);
+
+    // If favouritesOnly, return only single terms (for the "my recent favourites" feature)
+    if (favouritesOnly) {
+      const singleTerms = await db
+        .select()
+        .from(searchHistory)
+        .where(
+          and(
+            eq(searchHistory.clerkUserId, userId),
+            eq(searchHistory.isSingle, true)
+          )
+        )
+        .orderBy(desc(searchHistory.createdAt))
+        .limit(favouritesLimit * 3); // Fetch more to account for duplicates
+
+      const seenSingle = new Set<string>();
+      const favourites: string[] = [];
+      for (const entry of singleTerms) {
+        const query = entry.searchQuery.toLowerCase();
+        if (!seenSingle.has(query)) {
+          seenSingle.add(query);
+          favourites.push(entry.searchQuery);
+          if (favourites.length >= favouritesLimit) break;
+        }
+      }
+
+      return NextResponse.json({ favourites });
     }
 
     // Get full searches (isSingle=false) - last 5 unique
