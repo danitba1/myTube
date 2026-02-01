@@ -6,7 +6,6 @@ import {
   IconButton,
   Box,
   Chip,
-  Typography,
   CircularProgress,
   Checkbox,
   FormControlLabel,
@@ -15,10 +14,7 @@ import {
 import { 
   Search as SearchIcon, 
   Clear as ClearIcon,
-  History as HistoryIcon,
   Close as CloseIcon,
-  Person as PersonIcon,
-  QueueMusic as PlaylistIcon,
   Favorite as FavoriteIcon,
   Add as AddIcon,
 } from "@mui/icons-material";
@@ -204,156 +200,112 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
         </Button>
       </Box>
 
-      {/* Quick Actions - Playlists */}
-      <Box className={styles.quickActionsContainer}>
-        {/* Playlists Section */}
-        {!isLoadingPlaylists && playlists.length > 0 && (
-          <Box className={styles.playlistsContainer}>
-            <Box className={styles.playlistsHeader}>
-              <Box className={styles.historyTitleWrapper}>
-                <PlaylistIcon className={styles.playlistHeaderIcon} />
-                <Typography className={styles.historyTitle}>
-                  הפלייליסטים שלי
-                </Typography>
-              </Box>
-            </Box>
-            <Box className={styles.playlistChips}>
-              {playlists.map((playlist) => (
-                <Chip
-                  key={playlist.id}
-                  label={playlist.name}
-                  size="small"
-                  onClick={() => onPlaylistSelect?.(playlist.id)}
-                  className={styles.playlistChip}
-                  classes={{
-                    label: styles.chipLabel,
-                  }}
-                />
-              ))}
-            </Box>
-          </Box>
-        )}
-      </Box>
-
-      {/* Search History */}
+      {/* All chips combined - Playlists, Full History, Single Terms */}
       {isHistoryLoading ? (
         <Box className={styles.historyLoading}>
           <CircularProgress size={18} />
         </Box>
-      ) : (fullHistory.length > 0 || singleHistory.length > 0) && (
-        <Box className={styles.historyContainer}>
-          <Box className={styles.historyHeader}>
-            <Box className={styles.historyTitleWrapper}>
-              <HistoryIcon className={styles.historyIcon} />
-              <Typography className={styles.historyTitle}>
-                היסטוריית חיפושים
-              </Typography>
-            </Box>
+      ) : (playlists.length > 0 || fullHistory.length > 0 || singleHistory.length > 0) && (
+        <Box className={styles.allChipsContainer}>
+          {/* Clear all button */}
+          {(fullHistory.length > 0 || singleHistory.length > 0) && (
             <button
               className={styles.clearAllButton}
               onClick={clearHistory}
             >
               נקה הכל
             </button>
-          </Box>
-
-          {/* Two columns: Full searches (right) and Single terms (left) */}
-          <Box className={styles.historyColumns}>
-            {/* Right side - Full searches (show only 2, with expand button) */}
-            {fullHistory.length > 0 && (
-              <Box className={styles.historyColumn}>
-                <Typography className={styles.columnTitle}>חיפושים מלאים</Typography>
-                <Box className={styles.historyChips}>
-                  {/* Show first 2 items always */}
-                  {fullHistory.slice(0, 2).map((item, index) => (
-                    <Chip
-                      key={`full-${index}`}
-                      label={item}
-                      size="small"
-                      onClick={() => handleHistoryClick(item)}
-                      onDelete={() => removeFromHistory(item, false)}
-                      deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
-                      className={styles.fullHistoryChip}
-                      classes={{
-                        label: styles.chipLabel,
-                      }}
-                    />
-                  ))}
-                  {/* Show "+" button if there are more than 2 items */}
-                  {fullHistory.length > 2 && !showMoreFullHistory && (
-                    <Chip
-                      label={<AddIcon className={styles.expandIcon} />}
-                      size="small"
-                      onClick={() => setShowMoreFullHistory(true)}
-                      className={styles.expandChip}
-                    />
-                  )}
-                  {/* Show remaining items when expanded */}
-                  {showMoreFullHistory && fullHistory.slice(2).map((item, index) => (
-                    <Chip
-                      key={`full-more-${index}`}
-                      label={item}
-                      size="small"
-                      onClick={() => handleHistoryClick(item)}
-                      onDelete={() => removeFromHistory(item, false)}
-                      deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
-                      className={styles.fullHistoryChip}
-                      classes={{
-                        label: styles.chipLabel,
-                      }}
-                    />
-                  ))}
-                  {/* Show collapse button when expanded */}
-                  {showMoreFullHistory && fullHistory.length > 2 && (
-                    <Chip
-                      label="הסתר"
-                      size="small"
-                      onClick={() => setShowMoreFullHistory(false)}
-                      className={styles.collapseChip}
-                    />
-                  )}
-                </Box>
-              </Box>
+          )}
+          
+          <Box className={styles.allChips}>
+            {/* Playlists (green) */}
+            {!isLoadingPlaylists && playlists.map((playlist) => (
+              <Chip
+                key={`playlist-${playlist.id}`}
+                label={playlist.name}
+                size="small"
+                onClick={() => onPlaylistSelect?.(playlist.id)}
+                className={styles.playlistChip}
+                classes={{
+                  label: styles.chipLabel,
+                }}
+              />
+            ))}
+            
+            {/* Full searches (blue) - show first 2 */}
+            {fullHistory.slice(0, 2).map((item, index) => (
+              <Chip
+                key={`full-${index}`}
+                label={item}
+                size="small"
+                onClick={() => handleHistoryClick(item)}
+                onDelete={() => removeFromHistory(item, false)}
+                deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
+                className={styles.fullHistoryChip}
+                classes={{
+                  label: styles.chipLabel,
+                }}
+              />
+            ))}
+            
+            {/* Expand button for full history */}
+            {fullHistory.length > 2 && !showMoreFullHistory && (
+              <Chip
+                label={<AddIcon className={styles.expandIcon} />}
+                size="small"
+                onClick={() => setShowMoreFullHistory(true)}
+                className={styles.expandChip}
+              />
             )}
-
-            {/* Left side - Single terms (deduplicated) */}
-            {singleHistory.length > 0 && (() => {
-              // Deduplicate singleHistory (case-insensitive, normalize whitespace)
+            
+            {/* More full searches when expanded */}
+            {showMoreFullHistory && fullHistory.slice(2).map((item, index) => (
+              <Chip
+                key={`full-more-${index}`}
+                label={item}
+                size="small"
+                onClick={() => handleHistoryClick(item)}
+                onDelete={() => removeFromHistory(item, false)}
+                deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
+                className={styles.fullHistoryChip}
+                classes={{
+                  label: styles.chipLabel,
+                }}
+              />
+            ))}
+            
+            {/* Collapse button */}
+            {showMoreFullHistory && fullHistory.length > 2 && (
+              <Chip
+                label="הסתר"
+                size="small"
+                onClick={() => setShowMoreFullHistory(false)}
+                className={styles.collapseChip}
+              />
+            )}
+            
+            {/* Single terms (pink/purple) - deduplicated */}
+            {(() => {
               const seen = new Set<string>();
-              const uniqueSingleHistory = singleHistory.filter((item) => {
-                // Normalize: lowercase, trim, collapse multiple spaces
+              return singleHistory.filter((item) => {
                 const normalized = item.toLowerCase().trim().replace(/\s+/g, ' ');
-                if (!normalized || seen.has(normalized)) {
-                  return false;
-                }
+                if (!normalized || seen.has(normalized)) return false;
                 seen.add(normalized);
                 return true;
-              });
-              
-              return uniqueSingleHistory.length > 0 ? (
-                <Box className={styles.historyColumn}>
-                  <Typography className={styles.columnTitle}>
-                    <PersonIcon className={styles.columnIcon} />
-                    זמרים/נושאים
-                  </Typography>
-                  <Box className={styles.historyChips}>
-                    {uniqueSingleHistory.map((item, index) => (
-                      <Chip
-                        key={`single-${index}`}
-                        label={item.trim()}
-                        size="small"
-                        onClick={() => handleHistoryClick(item)}
-                        onDelete={() => removeFromHistory(item, true)}
-                        deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
-                        className={styles.singleHistoryChip}
-                        classes={{
-                          label: styles.chipLabel,
-                        }}
-                      />
-                    ))}
-                  </Box>
-                </Box>
-              ) : null;
+              }).map((item, index) => (
+                <Chip
+                  key={`single-${index}`}
+                  label={item.trim()}
+                  size="small"
+                  onClick={() => handleHistoryClick(item)}
+                  onDelete={() => removeFromHistory(item, true)}
+                  deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
+                  className={styles.singleHistoryChip}
+                  classes={{
+                    label: styles.chipLabel,
+                  }}
+                />
+              ));
             })()}
           </Box>
         </Box>
