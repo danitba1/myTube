@@ -231,10 +231,19 @@
   color: var(--color-error);
 }
 
+/* Checkbox Row - contains checkbox and favourites button */
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--spacing-xs);
+  padding-inline: var(--spacing-xs);
+  gap: var(--spacing-xs);
+}
+
 /* Prefer New Checkbox */
 .preferNewLabel {
-  margin-top: var(--spacing-xs);
-  margin-inline-start: var(--spacing-xs);
+  margin: 0;
 }
 
 .preferNewLabel :global(.MuiFormControlLabel-label) {
@@ -337,15 +346,14 @@
   border-color: #9c27b0;
 }
 
-/* Quick Actions Container */
+/* Quick Actions Container - Playlists only now */
 .quickActionsContainer {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
-  margin-top: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
   padding-inline: var(--spacing-xs);
-  padding-bottom: var(--spacing-sm);
-  border-bottom: 1px solid var(--color-divider);
+  padding-bottom: var(--spacing-xs);
 }
 
 @media (min-width: 600px) {
@@ -357,31 +365,41 @@
   }
 }
 
-/* My Recent Favourites Button - Orange/Coral theme */
+/* My Recent Favourites Button - Orange/Coral theme - Compact */
 .favouritesButton {
   background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
   color: white;
   font-weight: 600;
-  font-size: var(--font-size-xs);
-  padding: 6px 12px;
+  font-size: 0.65rem;
+  padding: 4px 8px;
   border-radius: var(--radius-md);
   text-transform: none;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 1px 4px rgba(255, 107, 107, 0.3);
   transition: all var(--transition-base);
   white-space: nowrap;
   flex-shrink: 0;
+  min-width: auto;
+  line-height: 1.2;
+}
+
+.favouritesIcon {
+  font-size: 14px !important;
 }
 
 @media (min-width: 600px) {
   .favouritesButton {
-    font-size: var(--font-size-sm);
-    padding: 8px 16px;
+    font-size: var(--font-size-xs);
+    padding: 6px 12px;
+  }
+  
+  .favouritesIcon {
+    font-size: 16px !important;
   }
 }
 
 .favouritesButton:hover {
   background: linear-gradient(135deg, #ff5252 0%, #ff7043 100%);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
   transform: translateY(-1px);
 }
 

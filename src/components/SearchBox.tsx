@@ -179,33 +179,33 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
         </IconButton>
       </Paper>
 
-      {/* Prefer New Checkbox */}
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={preferNew}
-            onChange={(e) => setPreferNew(e.target.checked)}
-            size="small"
-            className={styles.preferNewCheckbox}
-          />
-        }
-        label="העדפה לסרטונים חדשים"
-        className={styles.preferNewLabel}
-      />
-
-      {/* Quick Actions - Playlists & Favourites */}
-      <Box className={styles.quickActionsContainer}>
-        {/* My Recent Favourites Button */}
+      {/* Prefer New Checkbox + Favourites Button - same row */}
+      <Box className={styles.checkboxRow}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={preferNew}
+              onChange={(e) => setPreferNew(e.target.checked)}
+              size="small"
+              className={styles.preferNewCheckbox}
+            />
+          }
+          label="העדפה לסרטונים חדשים"
+          className={styles.preferNewLabel}
+        />
         <Button
           variant="contained"
-          startIcon={isLoadingFavourites ? <CircularProgress size={16} color="inherit" /> : <FavoriteIcon />}
+          startIcon={isLoadingFavourites ? <CircularProgress size={12} color="inherit" /> : <FavoriteIcon className={styles.favouritesIcon} />}
           onClick={handleRecentFavourites}
           disabled={isLoadingFavourites}
           className={styles.favouritesButton}
         >
           המועדפים שלי
         </Button>
+      </Box>
 
+      {/* Quick Actions - Playlists */}
+      <Box className={styles.quickActionsContainer}>
         {/* Playlists Section */}
         {!isLoadingPlaylists && playlists.length > 0 && (
           <Box className={styles.playlistsContainer}>
