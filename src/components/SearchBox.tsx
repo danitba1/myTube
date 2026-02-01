@@ -288,7 +288,13 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
             {(() => {
               const seen = new Set<string>();
               return singleHistory.filter((item) => {
-                const normalized = item.toLowerCase().trim().replace(/\s+/g, ' ');
+                // Normalize: lowercase, trim, remove zero-width chars, collapse whitespace
+                const normalized = item
+                  .normalize('NFC')
+                  .toLowerCase()
+                  .trim()
+                  .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '') // Remove zero-width and non-breaking spaces
+                  .replace(/\s+/g, ' ');
                 if (!normalized || seen.has(normalized)) return false;
                 seen.add(normalized);
                 return true;

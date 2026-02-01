@@ -36,8 +36,13 @@ export async function GET(request: NextRequest) {
       const seenSingle = new Set<string>();
       const favourites: string[] = [];
       for (const entry of singleTerms) {
-        // Normalize: lowercase, trim, collapse whitespace
-        const normalized = entry.searchQuery.toLowerCase().trim().replace(/\s+/g, ' ');
+        // Normalize: lowercase, trim, collapse whitespace, remove zero-width chars
+        const normalized = entry.searchQuery
+          .normalize('NFC')
+          .toLowerCase()
+          .trim()
+          .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '') // Remove zero-width and non-breaking spaces
+          .replace(/\s+/g, ' ');
         if (normalized && !seenSingle.has(normalized)) {
           seenSingle.add(normalized);
           favourites.push(entry.searchQuery.trim());
@@ -88,8 +93,13 @@ export async function GET(request: NextRequest) {
     const seenSingle = new Set<string>();
     const singleHistory: string[] = [];
     for (const entry of singleTerms) {
-      // Normalize: lowercase, trim, collapse whitespace
-      const normalized = entry.searchQuery.toLowerCase().trim().replace(/\s+/g, ' ');
+      // Normalize: lowercase, trim, collapse whitespace, remove zero-width chars
+      const normalized = entry.searchQuery
+        .normalize('NFC')
+        .toLowerCase()
+        .trim()
+        .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '') // Remove zero-width and non-breaking spaces
+        .replace(/\s+/g, ' ');
       if (normalized && !seenSingle.has(normalized)) {
         seenSingle.add(normalized);
         singleHistory.push(entry.searchQuery.trim());
