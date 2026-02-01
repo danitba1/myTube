@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback } from "react";
 import { Box, Container, Typography, Alert, Snackbar, Chip, Stack, IconButton, Tooltip } from "@mui/material";
 import { Shuffle as ShuffleIcon } from "@mui/icons-material";
 import Header from "@/components/Header";
@@ -35,8 +35,9 @@ export default function DashboardPage() {
   
   const { skippedVideoIds, addToSkipList } = useSkippedVideos();
   const { fullHistory, isLoading: isHistoryLoading } = useSearchHistory();
-  const hasAutoSearched = useRef(false);
-  const handleSearchRef = useRef<(query: string, preferNew?: boolean, isFavourites?: boolean) => void>(() => {});
+  
+  // Get initial search value from history (last search)
+  const initialSearchValue = !isHistoryLoading && fullHistory.length > 0 ? fullHistory[0] : "";
 
   const handleSearch = useCallback(async (query: string, preferNew?: boolean, isFavourites?: boolean) => {
     if (!query.trim()) return;
@@ -149,20 +150,6 @@ export default function DashboardPage() {
     }
   }, [skippedVideoIds]);
 
-  // Keep ref updated with latest handleSearch
-  useEffect(() => {
-    handleSearchRef.current = handleSearch;
-  }, [handleSearch]);
-
-  // Auto-search last query on app load
-  useEffect(() => {
-    if (!isHistoryLoading && !hasAutoSearched.current && fullHistory.length > 0) {
-      hasAutoSearched.current = true;
-      const lastSearch = fullHistory[0];
-      // Trigger search with preferNew=true (default)
-      handleSearchRef.current(lastSearch, true);
-    }
-  }, [isHistoryLoading, fullHistory]);
 
   const handleVideoSelect = useCallback((video: Video) => {
     setSelectedVideo(video);
@@ -277,7 +264,7 @@ export default function DashboardPage() {
 
   return (
     <Box className={styles.pageContainer}>
-      <Header onSearch={handleSearch} onPlaylistSelect={handlePlaylistSelect} />
+      <Header onSearch={handleSearch} onPlaylistSelect={handlePlaylistSelect} initialSearchValue={initialSearchValue} />
 
       <Container maxWidth={false} className={styles.mainContainer}>
         <Box className={styles.contentWrapper}>

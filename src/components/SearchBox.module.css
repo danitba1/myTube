@@ -450,3 +450,58 @@
   border-color: #4caf50;
 }
 
+/* Expand/Collapse chips for full history */
+.expandChip {
+  background-color: #fff3e0;
+  border: 1px solid #ffb74d;
+  transition: all var(--transition-base);
+  cursor: pointer;
+  height: 24px;
+  color: #e65100;
+  font-weight: 600;
+  min-width: 32px;
+}
+
+@media (min-width: 600px) {
+  .expandChip {
+    height: 28px;
+    min-width: 36px;
+  }
+}
+
+.expandChip:hover {
+  background-color: #ffe0b2;
+  border-color: #ff9800;
+}
+
+.expandIcon {
+  font-size: 16px !important;
+}
+
+@media (min-width: 600px) {
+  .expandIcon {
+    font-size: 18px !important;
+  }
+}
+
+.collapseChip {
+  background-color: #fce4ec;
+  border: 1px solid #f48fb1;
+  transition: all var(--transition-base);
+  cursor: pointer;
+  height: 24px;
+  color: #c2185b;
+  font-weight: 500;
+}
+
+@media (min-width: 600px) {
+  .collapseChip {
+    height: 28px;
+  }
+}
+
+.collapseChip:hover {
+  background-color: #f8bbd9;
+  border-color: #e91e63;
+}
+

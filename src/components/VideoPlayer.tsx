@@ -12,6 +12,8 @@ import {
   Block as BlockIcon,
   Headphones as HeadphonesIcon,
   Videocam as VideocamIcon,
+  PlayArrow as PlayArrowIcon,
+  Pause as PauseIcon,
 } from "@mui/icons-material";
 import { Video, formatViewCount, formatLikeCount, formatRelativeTime } from "@/types/youtube";
 import styles from "./VideoPlayer.module.css";
@@ -80,6 +82,7 @@ export default function VideoPlayer({
   const hasStartedPlayingRef = useRef(false);
   const isSkippingRef = useRef(false);
   const [isAudioMode, setIsAudioMode] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // Keep refs updated
   useEffect(() => {
@@ -181,6 +184,13 @@ export default function VideoPlayer({
       } else if (event.data === 2) { // PAUSED
         navigator.mediaSession.playbackState = 'paused';
       }
+    }
+
+    // Update isPlaying state
+    if (event.data === 1) { // PLAYING
+      setIsPlaying(true);
+    } else if (event.data === 2 || event.data === 0) { // PAUSED or ENDED
+      setIsPlaying(false);
     }
 
     // Video started playing - clear all timeouts and mark as started
@@ -305,6 +315,17 @@ export default function VideoPlayer({
       return !prev;
     });
   }, [requestWakeLock, releaseWakeLock, startSilentAudio, stopSilentAudio]);
+
+  // Toggle play/pause
+  const handlePlayPause = useCallback(() => {
+    if (!playerRef.current) return;
+    
+    if (isPlaying) {
+      playerRef.current.pauseVideo?.();
+    } else {
+      playerRef.current.playVideo?.();
+    }
+  }, [isPlaying]);
 
   // Auto-request wake lock and silent audio when in audio mode
   useEffect(() => {
@@ -471,17 +492,31 @@ export default function VideoPlayer({
         )}
       </Box>
 
-      {/* Floating Next Button - Mobile Only */}
-      {hasNext && (
+      {/* Floating Buttons - Mobile Only */}
+      <Box className={styles.floatingButtonsContainer}>
         <Button
           variant="contained"
-          onClick={onNext}
-          className={styles.floatingNextButton}
-          aria-label="הבא"
+          onClick={handlePlayPause}
+          className={styles.floatingPlayButton}
+          aria-label={isPlaying ? "השהה" : "נגן"}
         >
-          <SkipNextIcon className={styles.floatingNextIcon} />
+          {isPlaying ? (
+            <PauseIcon className={styles.floatingPlayIcon} />
+          ) : (
+            <PlayArrowIcon className={styles.floatingPlayIcon} />
+          )}
         </Button>
-      )}
+        {hasNext && (
+          <Button
+            variant="contained"
+            onClick={onNext}
+            className={styles.floatingNextButton}
+            aria-label="הבא"
+          >
+            <SkipNextIcon className={styles.floatingNextIcon} />
+          </Button>
+        )}
+      </Box>
 
       {/* Navigation Buttons */}
       <Box className={styles.navigationButtons}>

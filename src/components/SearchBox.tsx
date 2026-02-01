@@ -20,6 +20,7 @@ import {
   Person as PersonIcon,
   QueueMusic as PlaylistIcon,
   Favorite as FavoriteIcon,
+  Add as AddIcon,
 } from "@mui/icons-material";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import styles from "./SearchBox.module.css";
@@ -32,14 +33,24 @@ interface Playlist {
 interface SearchBoxProps {
   onSearch?: (query: string, preferNew?: boolean, isFavourites?: boolean) => void;
   onPlaylistSelect?: (playlistId: string) => void;
+  initialValue?: string;
 }
 
-export default function SearchBox({ onSearch, onPlaylistSelect }: SearchBoxProps) {
-  const [query, setQuery] = useState("");
+export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: SearchBoxProps) {
+  const [query, setQuery] = useState(initialValue || "");
+  const hasSetInitialValue = useState(false)[0];
+
+  // Update query when initialValue changes (only if not already set)
+  useEffect(() => {
+    if (initialValue && !hasSetInitialValue && !query) {
+      setQuery(initialValue);
+    }
+  }, [initialValue, hasSetInitialValue, query]);
   const [preferNew, setPreferNew] = useState(true);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(true);
   const [isLoadingFavourites, setIsLoadingFavourites] = useState(false);
+  const [showMoreFullHistory, setShowMoreFullHistory] = useState(false);
   const { 
     fullHistory,
     singleHistory,
@@ -248,12 +259,13 @@ export default function SearchBox({ onSearch, onPlaylistSelect }: SearchBoxProps
 
           {/* Two columns: Full searches (right) and Single terms (left) */}
           <Box className={styles.historyColumns}>
-            {/* Right side - Full searches */}
+            {/* Right side - Full searches (show only 2, with expand button) */}
             {fullHistory.length > 0 && (
               <Box className={styles.historyColumn}>
                 <Typography className={styles.columnTitle}>חיפושים מלאים</Typography>
                 <Box className={styles.historyChips}>
-                  {fullHistory.map((item, index) => (
+                  {/* Show first 2 items always */}
+                  {fullHistory.slice(0, 2).map((item, index) => (
                     <Chip
                       key={`full-${index}`}
                       label={item}
@@ -267,35 +279,81 @@ export default function SearchBox({ onSearch, onPlaylistSelect }: SearchBoxProps
                       }}
                     />
                   ))}
-                </Box>
-              </Box>
-            )}
-
-            {/* Left side - Single terms */}
-            {singleHistory.length > 0 && (
-              <Box className={styles.historyColumn}>
-                <Typography className={styles.columnTitle}>
-                  <PersonIcon className={styles.columnIcon} />
-                  זמרים/נושאים
-                </Typography>
-                <Box className={styles.historyChips}>
-                  {singleHistory.map((item, index) => (
+                  {/* Show "+" button if there are more than 2 items */}
+                  {fullHistory.length > 2 && !showMoreFullHistory && (
                     <Chip
-                      key={`single-${index}`}
+                      label={<AddIcon className={styles.expandIcon} />}
+                      size="small"
+                      onClick={() => setShowMoreFullHistory(true)}
+                      className={styles.expandChip}
+                    />
+                  )}
+                  {/* Show remaining items when expanded */}
+                  {showMoreFullHistory && fullHistory.slice(2).map((item, index) => (
+                    <Chip
+                      key={`full-more-${index}`}
                       label={item}
                       size="small"
                       onClick={() => handleHistoryClick(item)}
-                      onDelete={() => removeFromHistory(item, true)}
+                      onDelete={() => removeFromHistory(item, false)}
                       deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
-                      className={styles.singleHistoryChip}
+                      className={styles.fullHistoryChip}
                       classes={{
                         label: styles.chipLabel,
                       }}
                     />
                   ))}
+                  {/* Show collapse button when expanded */}
+                  {showMoreFullHistory && fullHistory.length > 2 && (
+                    <Chip
+                      label="הסתר"
+                      size="small"
+                      onClick={() => setShowMoreFullHistory(false)}
+                      className={styles.collapseChip}
+                    />
+                  )}
                 </Box>
               </Box>
             )}
+
+            {/* Left side - Single terms (deduplicated) */}
+            {singleHistory.length > 0 && (() => {
+              // Deduplicate singleHistory (case-insensitive)
+              const seen = new Set<string>();
+              const uniqueSingleHistory = singleHistory.filter((item) => {
+                const lowerItem = item.toLowerCase().trim();
+                if (seen.has(lowerItem)) {
+                  return false;
+                }
+                seen.add(lowerItem);
+                return true;
+              });
+              
+              return uniqueSingleHistory.length > 0 ? (
+                <Box className={styles.historyColumn}>
+                  <Typography className={styles.columnTitle}>
+                    <PersonIcon className={styles.columnIcon} />
+                    זמרים/נושאים
+                  </Typography>
+                  <Box className={styles.historyChips}>
+                    {uniqueSingleHistory.map((item, index) => (
+                      <Chip
+                        key={`single-${index}`}
+                        label={item}
+                        size="small"
+                        onClick={() => handleHistoryClick(item)}
+                        onDelete={() => removeFromHistory(item, true)}
+                        deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
+                        className={styles.singleHistoryChip}
+                        classes={{
+                          label: styles.chipLabel,
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              ) : null;
+            })()}
           </Box>
         </Box>
       )}
