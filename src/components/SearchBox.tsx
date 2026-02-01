@@ -318,14 +318,15 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
 
             {/* Left side - Single terms (deduplicated) */}
             {singleHistory.length > 0 && (() => {
-              // Deduplicate singleHistory (case-insensitive)
+              // Deduplicate singleHistory (case-insensitive, normalize whitespace)
               const seen = new Set<string>();
               const uniqueSingleHistory = singleHistory.filter((item) => {
-                const lowerItem = item.toLowerCase().trim();
-                if (seen.has(lowerItem)) {
+                // Normalize: lowercase, trim, collapse multiple spaces
+                const normalized = item.toLowerCase().trim().replace(/\s+/g, ' ');
+                if (!normalized || seen.has(normalized)) {
                   return false;
                 }
-                seen.add(lowerItem);
+                seen.add(normalized);
                 return true;
               });
               
@@ -339,7 +340,7 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
                     {uniqueSingleHistory.map((item, index) => (
                       <Chip
                         key={`single-${index}`}
-                        label={item}
+                        label={item.trim()}
                         size="small"
                         onClick={() => handleHistoryClick(item)}
                         onDelete={() => removeFromHistory(item, true)}

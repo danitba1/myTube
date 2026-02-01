@@ -36,10 +36,11 @@ export async function GET(request: NextRequest) {
       const seenSingle = new Set<string>();
       const favourites: string[] = [];
       for (const entry of singleTerms) {
-        const query = entry.searchQuery.toLowerCase();
-        if (!seenSingle.has(query)) {
-          seenSingle.add(query);
-          favourites.push(entry.searchQuery);
+        // Normalize: lowercase, trim, collapse whitespace
+        const normalized = entry.searchQuery.toLowerCase().trim().replace(/\s+/g, ' ');
+        if (normalized && !seenSingle.has(normalized)) {
+          seenSingle.add(normalized);
+          favourites.push(entry.searchQuery.trim());
           if (favourites.length >= favouritesLimit) break;
         }
       }
@@ -82,15 +83,16 @@ export async function GET(request: NextRequest) {
         )
       )
       .orderBy(desc(searchHistory.createdAt))
-      .limit(50);
+      .limit(100); // Fetch more to ensure we get 10 unique after dedup
 
     const seenSingle = new Set<string>();
     const singleHistory: string[] = [];
     for (const entry of singleTerms) {
-      const query = entry.searchQuery.toLowerCase();
-      if (!seenSingle.has(query)) {
-        seenSingle.add(query);
-        singleHistory.push(entry.searchQuery);
+      // Normalize: lowercase, trim, collapse whitespace
+      const normalized = entry.searchQuery.toLowerCase().trim().replace(/\s+/g, ' ');
+      if (normalized && !seenSingle.has(normalized)) {
+        seenSingle.add(normalized);
+        singleHistory.push(entry.searchQuery.trim());
         if (singleHistory.length >= 10) break;
       }
     }
