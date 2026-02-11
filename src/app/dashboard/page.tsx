@@ -9,6 +9,7 @@ import VideoList from "@/components/VideoList";
 import { Video } from "@/types/youtube";
 import { useSkippedVideos } from "@/hooks/useSkippedVideos";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
+import { usePlayedVideos } from "@/hooks/usePlayedVideos";
 import styles from "./page.module.css";
 
 // Fisher-Yates shuffle algorithm
@@ -32,15 +33,20 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
+  const [avoidDuplicates, setAvoidDuplicates] = useState(true);
   
   const { skippedVideoIds, addToSkipList } = useSkippedVideos();
   const { fullHistory, isLoading: isHistoryLoading } = useSearchHistory();
+  const { playedVideoIds, markAsPlayed } = usePlayedVideos();
   
   // Get initial search value from history (last search)
   const initialSearchValue = !isHistoryLoading && fullHistory.length > 0 ? fullHistory[0] : "";
 
-  const handleSearch = useCallback(async (query: string, preferNew?: boolean, isFavourites?: boolean) => {
+  const handleSearch = useCallback(async (query: string, preferNew?: boolean, isFavourites?: boolean, avoidDuplicatesParam: boolean = true) => {
     if (!query.trim()) return;
+    
+    // Update the avoidDuplicates state
+    setAvoidDuplicates(avoidDuplicatesParam);
 
     let terms = query
       .split(",")
@@ -106,7 +112,13 @@ export default function DashboardPage() {
       );
 
       const filteredVideos = uniqueVideos.filter(
-        (video) => !skippedVideoIds.includes(video.id)
+        (video) => {
+          if (!skippedVideoIds.includes(video.id)) {
+            // Only filter played videos if avoidDuplicates is enabled
+            return !avoidDuplicatesParam || !playedVideoIds.includes(video.id);
+          }
+          return false;
+        }
       );
 
       const shuffledVideos = shuffleArray(filteredVideos);
@@ -148,7 +160,7 @@ export default function DashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [skippedVideoIds]);
+  }, [skippedVideoIds, playedVideoIds]);
 
 
   const handleVideoSelect = useCallback((video: Video) => {
@@ -209,6 +221,10 @@ export default function DashboardPage() {
     setWarningMessage(null);
   };
 
+  const handleVideoPlayed = useCallback((videoId: string, videoTitle: string, channelName: string) => {
+    markAsPlayed(videoId, videoTitle, channelName);
+  }, [markAsPlayed]);
+
   const handlePlaylistSelect = useCallback(async (playlistId: string) => {
     setIsLoading(true);
     setError(null);
@@ -240,9 +256,15 @@ export default function DashboardPage() {
         duration: v.duration || "",
       }));
 
-      // Filter out skipped videos
+      // Filter out skipped videos and optionally played videos
       const filteredVideos = playlistVideos.filter(
-        (video) => !skippedVideoIds.includes(video.id)
+        (video) => {
+          if (!skippedVideoIds.includes(video.id)) {
+            // Only filter played videos if avoidDuplicates is enabled
+            return !avoidDuplicates || !playedVideoIds.includes(video.id);
+          }
+          return false;
+        }
       );
 
       setVideos(filteredVideos);
@@ -260,7 +282,7 @@ export default function DashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [skippedVideoIds]);
+  }, [skippedVideoIds, playedVideoIds, avoidDuplicates]);
 
   return (
     <Box className={styles.pageContainer}>
@@ -276,6 +298,7 @@ export default function DashboardPage() {
               onPrevious={handlePrevious}
               onNext={handleNext}
               onAlwaysSkip={handleAlwaysSkip}
+              onVideoPlayed={handleVideoPlayed}
               hasPrevious={currentIndex > 0}
               hasNext={currentIndex < videos.length - 1 && currentIndex >= 0}
             />

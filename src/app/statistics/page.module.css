@@ -1,0 +1,191 @@
+/* Statistics Page Styles */
+
+.pageContainer {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  direction: rtl;
+}
+
+.mainContainer {
+  padding-top: var(--spacing-lg);
+  padding-bottom: var(--spacing-xl);
+}
+
+.headerSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.backButton {
+  align-self: flex-start;
+  border-radius: var(--radius-md);
+  text-transform: none;
+  font-weight: 500;
+}
+
+.pageTitle {
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-align: center;
+  margin: 0;
+}
+
+.statsGrid {
+  margin-bottom: var(--spacing-lg);
+}
+
+.statCard {
+  height: 100%;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  border-radius: var(--radius-md);
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.statNumber {
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-top: var(--spacing-xs);
+}
+
+.tabsPaper {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.tabContent {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.videoItem {
+  border-bottom: 1px solid var(--color-divider);
+  padding: var(--spacing-md) var(--spacing-lg);
+  transition: background-color var(--transition-fast);
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  cursor: pointer;
+}
+
+.videoItem:hover {
+  background-color: var(--color-grey-50);
+}
+
+.videoItem:last-child {
+  border-bottom: none;
+}
+
+.videoText {
+  flex: 1;
+  min-width: 0;
+}
+
+.videoText :global(.MuiListItemText-primary) {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.videoText :global(.MuiListItemText-secondary) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+}
+
+.rankBadge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.playIcon {
+  color: var(--color-text-secondary);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .mainContainer {
+    padding-top: var(--spacing-md);
+    padding-inline: var(--spacing-sm);
+  }
+
+  .headerSection {
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .backButton {
+    font-size: 0.875rem;
+    padding: 6px 12px;
+  }
+
+  .pageTitle {
+    font-size: 1.75rem;
+  }
+
+  .statsGrid {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .statNumber {
+    font-size: 1.75rem;
+  }
+
+  .videoItem {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .rankBadge {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+
+  .videoText :global(.MuiListItemText-primary) {
+    font-size: 0.875rem;
+  }
+
+  .videoText :global(.MuiListItemText-secondary) {
+    font-size: 0.75rem;
+  }
+}
+
+/* Scrollbar styling */
+.tabContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tabContent::-webkit-scrollbar-track {
+  background: var(--color-grey-100);
+}
+
+.tabContent::-webkit-scrollbar-thumb {
+  background: var(--color-grey-300);
+  border-radius: 4px;
+}
+
+.tabContent::-webkit-scrollbar-thumb:hover {
+  background: var(--color-grey-400);
+}

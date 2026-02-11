@@ -56,6 +56,16 @@ export const playlistVideos = pgTable("playlist_videos", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Played videos table - track videos played by date to avoid repeats on same day
+export const playedVideos = pgTable("played_videos", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  clerkUserId: text("clerk_user_id").notNull(),
+  videoId: text("video_id").notNull(),
+  videoTitle: text("video_title"),
+  channelName: text("channel_name"),
+  playedAt: timestamp("played_at").defaultNow().notNull(),
+});
+
 // Types for TypeScript
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type NewUserPreferences = typeof userPreferences.$inferInsert;
@@ -72,3 +82,5 @@ export type NewPlaylist = typeof playlists.$inferInsert;
 export type PlaylistVideo = typeof playlistVideos.$inferSelect;
 export type NewPlaylistVideo = typeof playlistVideos.$inferInsert;
 
+export type PlayedVideo = typeof playedVideos.$inferSelect;
+export type NewPlayedVideo = typeof playedVideos.$inferInsert;

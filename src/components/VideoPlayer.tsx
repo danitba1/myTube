@@ -55,6 +55,7 @@ interface VideoPlayerProps {
   onPrevious?: () => void;
   onNext?: () => void;
   onAlwaysSkip?: () => void;
+  onVideoPlayed?: (videoId: string, videoTitle: string, channelName: string) => void;
   hasPrevious?: boolean;
   hasNext?: boolean;
 }
@@ -65,6 +66,7 @@ export default function VideoPlayer({
   onPrevious, 
   onNext, 
   onAlwaysSkip,
+  onVideoPlayed,
   hasPrevious = false, 
   hasNext = false 
 }: VideoPlayerProps) {
@@ -72,6 +74,7 @@ export default function VideoPlayer({
   const onNextRef = useRef(onNext);
   const onPreviousRef = useRef(onPrevious);
   const onAlwaysSkipRef = useRef(onAlwaysSkip);
+  const onVideoPlayedRef = useRef(onVideoPlayed);
   const hasNextRef = useRef(hasNext);
   const hasPreviousRef = useRef(hasPrevious);
   const videoRef = useRef(video);
@@ -80,6 +83,7 @@ export default function VideoPlayer({
   const playbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const bufferingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasStartedPlayingRef = useRef(false);
+  const hasBeenMarkedAsPlayedRef = useRef(false);
   const isSkippingRef = useRef(false);
   const [isAudioMode, setIsAudioMode] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -89,10 +93,11 @@ export default function VideoPlayer({
     onNextRef.current = onNext;
     onPreviousRef.current = onPrevious;
     onAlwaysSkipRef.current = onAlwaysSkip;
+    onVideoPlayedRef.current = onVideoPlayed;
     hasNextRef.current = hasNext;
     hasPreviousRef.current = hasPrevious;
     videoRef.current = video;
-  }, [onNext, onPrevious, onAlwaysSkip, hasNext, hasPrevious, video]);
+  }, [onNext, onPrevious, onAlwaysSkip, onVideoPlayed, hasNext, hasPrevious, video]);
 
   // Setup Media Session API for lock screen / notification controls
   useEffect(() => {
@@ -197,6 +202,16 @@ export default function VideoPlayer({
     if (event.data === 1) { // PLAYING
       hasStartedPlayingRef.current = true;
       clearAllTimeouts();
+      
+      // Mark video as played (only once per video)
+      if (!hasBeenMarkedAsPlayedRef.current && videoRef.current && onVideoPlayedRef.current) {
+        hasBeenMarkedAsPlayedRef.current = true;
+        onVideoPlayedRef.current(
+          videoRef.current.id, 
+          videoRef.current.title, 
+          videoRef.current.channelName
+        );
+      }
     }
 
     // Handle buffering state - set a timeout to skip if stuck buffering
@@ -354,6 +369,7 @@ export default function VideoPlayer({
 
     // Reset playback tracking for new video
     hasStartedPlayingRef.current = false;
+    hasBeenMarkedAsPlayedRef.current = false;
     isSkippingRef.current = false;
     
     // Clear any existing timeouts

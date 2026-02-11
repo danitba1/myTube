@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Paper,
   IconButton,
@@ -27,22 +27,24 @@ interface Playlist {
 }
 
 interface SearchBoxProps {
-  onSearch?: (query: string, preferNew?: boolean, isFavourites?: boolean) => void;
+  onSearch?: (query: string, preferNew?: boolean, isFavourites?: boolean, avoidDuplicates?: boolean) => void;
   onPlaylistSelect?: (playlistId: string) => void;
   initialValue?: string;
 }
 
 export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: SearchBoxProps) {
-  const [query, setQuery] = useState(initialValue || "");
-  const hasSetInitialValue = useState(false)[0];
+  const [query, setQuery] = useState("");
+  const hasSetInitialValue = useRef(false);
 
-  // Update query when initialValue changes (only if not already set)
+  // Set initial value only once on mount
   useEffect(() => {
-    if (initialValue && !hasSetInitialValue && !query) {
+    if (initialValue && !hasSetInitialValue.current) {
       setQuery(initialValue);
+      hasSetInitialValue.current = true;
     }
-  }, [initialValue, hasSetInitialValue, query]);
+  }, [initialValue]);
   const [preferNew, setPreferNew] = useState(true);
+  const [avoidDuplicates, setAvoidDuplicates] = useState(true);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(true);
   const [isLoadingFavourites, setIsLoadingFavourites] = useState(false);
@@ -80,7 +82,7 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
           setQuery(combinedQuery);
           // Also trigger the search immediately with isFavourites=true to bypass 10-term limit
           if (onSearch) {
-            onSearch(combinedQuery, preferNew, true);
+            onSearch(combinedQuery, preferNew, true, avoidDuplicates);
           }
         }
       }
@@ -114,7 +116,7 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
       const trimmedQuery = query.trim();
       const terms = trimmedQuery.split(",").map(t => t.trim()).filter(t => t.length > 0);
       addToHistory(trimmedQuery, terms, undefined, true);
-      onSearch(trimmedQuery, preferNew);
+      onSearch(trimmedQuery, preferNew, false, avoidDuplicates);
     }
   };
 
@@ -124,7 +126,9 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
     }
   };
 
-  const handleClear = () => {
+  const handleClear = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setQuery("");
   };
 
@@ -166,6 +170,8 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
             size="small"
             onClick={handleClear}
             className={styles.clearButton}
+            aria-label="נקה חיפוש"
+            type="button"
           >
             <ClearIcon className={styles.clearIcon} />
           </IconButton>
@@ -175,20 +181,34 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
         </IconButton>
       </Paper>
 
-      {/* Prefer New Checkbox + Favourites Button - same row */}
+      {/* Prefer New Checkbox + Avoid Duplicates Checkbox + Favourites Button - same row */}
       <Box className={styles.checkboxRow}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={preferNew}
-              onChange={(e) => setPreferNew(e.target.checked)}
-              size="small"
-              className={styles.preferNewCheckbox}
-            />
-          }
-          label="העדפה לסרטונים חדשים"
-          className={styles.preferNewLabel}
-        />
+        <Box className={styles.checkboxesGroup}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={preferNew}
+                onChange={(e) => setPreferNew(e.target.checked)}
+                size="small"
+                className={styles.preferNewCheckbox}
+              />
+            }
+            label="העדפה לסרטונים חדשים"
+            className={styles.preferNewLabel}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={avoidDuplicates}
+                onChange={(e) => setAvoidDuplicates(e.target.checked)}
+                size="small"
+                className={styles.preferNewCheckbox}
+              />
+            }
+            label="הימנע מכפילויות"
+            className={styles.preferNewLabel}
+          />
+        </Box>
         <Button
           variant="contained"
           startIcon={isLoadingFavourites ? <CircularProgress size={12} color="inherit" /> : <FavoriteIcon className={styles.favouritesIcon} />}

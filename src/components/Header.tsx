@@ -1,11 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { AppBar, Toolbar, Box, IconButton, Badge, Typography, Skeleton } from "@mui/material";
+import { useRouter } from "next/navigation";
+import { AppBar, Toolbar, Box, IconButton, Badge, Typography, Skeleton, Tooltip } from "@mui/material";
 import {
   VideoCall as VideoCallIcon,
   Notifications as NotificationsIcon,
   VideoLibrary as VideoLibraryIcon,
+  BarChart as BarChartIcon,
 } from "@mui/icons-material";
 import { UserButton } from "@clerk/nextjs";
 import styles from "./Header.module.css";
@@ -30,12 +32,18 @@ interface HeaderProps {
 }
 
 export default function Header({ onSearch, onPlaylistSelect, initialSearchValue }: HeaderProps) {
+  const router = useRouter();
+
   return (
     <AppBar position="sticky" elevation={0} className={styles.appBar}>
       <Toolbar className={styles.toolbar}>
         {/* Left Section - Logo */}
         <Box className={styles.logoSection}>
-          <Box className={styles.logoWrapper}>
+          <Box 
+            className={styles.logoWrapper} 
+            onClick={() => router.push("/dashboard")}
+            style={{ cursor: "pointer" }}
+          >
             <VideoLibraryIcon className={styles.logoIcon} />
             <Typography variant="h6" className={styles.logoText}>
               MyTube
@@ -50,6 +58,15 @@ export default function Header({ onSearch, onPlaylistSelect, initialSearchValue 
 
         {/* Right Section - Actions */}
         <Box className={styles.actionsSection}>
+          <Tooltip title="סטטיסטיקות">
+            <IconButton 
+              className={styles.iconButton}
+              onClick={() => router.push("/statistics")}
+            >
+              <BarChartIcon />
+            </IconButton>
+          </Tooltip>
+
           <IconButton className={`${styles.iconButton} ${styles.mdDesktopOnly}`}>
             <VideoCallIcon />
           </IconButton>

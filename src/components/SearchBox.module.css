@@ -233,7 +233,7 @@
   color: var(--color-error);
 }
 
-/* Checkbox Row - contains checkbox and favourites button */
+/* Checkbox Row - contains checkboxes and favourites button */
 .checkboxRow {
   display: flex;
   align-items: center;
@@ -241,6 +241,20 @@
   margin-top: var(--spacing-xs);
   padding-inline: var(--spacing-xs);
   gap: var(--spacing-xs);
+}
+
+/* Checkboxes Group - holds multiple checkboxes */
+.checkboxesGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (min-width: 600px) {
+  .checkboxesGroup {
+    gap: var(--spacing-sm);
+  }
 }
 
 /* Prefer New Checkbox */
