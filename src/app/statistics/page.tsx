@@ -8,7 +8,6 @@ import {
   Typography, 
   Card, 
   CardContent, 
-  Grid,
   List,
   ListItem,
   ListItemText,
@@ -159,82 +158,74 @@ export default function StatisticsPage() {
         </Box>
 
         {/* Overview Cards */}
-        <Grid container spacing={2} className={styles.statsGrid}>
-          <Grid item xs={6} sm={3}>
-            <Card className={styles.statCard}>
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} mb={1}>
-                  <PlayIcon color="primary" />
-                  <Typography variant="body2" color="text.secondary">
-                    סך הכל השמעות
-                  </Typography>
-                </Box>
-                <Typography variant="h4" className={styles.statNumber}>
-                  {stats?.totalPlays || 0}
+        <Box className={styles.statsGrid}>
+          <Card className={styles.statCard}>
+            <CardContent>
+              <Box display="flex" alignItems="center" gap={1} mb={1}>
+                <PlayIcon color="primary" />
+                <Typography variant="body2" color="text.secondary">
+                  סך הכל השמעות
                 </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+              </Box>
+              <Typography variant="h4" className={styles.statNumber}>
+                {stats?.totalPlays || 0}
+              </Typography>
+            </CardContent>
+          </Card>
 
-          <Grid item xs={6} sm={3}>
-            <Card className={styles.statCard}>
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} mb={1}>
-                  <MusicIcon color="secondary" />
-                  <Typography variant="body2" color="text.secondary">
-                    סרטונים ייחודיים
-                  </Typography>
-                </Box>
-                <Typography variant="h4" className={styles.statNumber}>
-                  {stats?.uniqueVideos || 0}
+          <Card className={styles.statCard}>
+            <CardContent>
+              <Box display="flex" alignItems="center" gap={1} mb={1}>
+                <MusicIcon color="secondary" />
+                <Typography variant="body2" color="text.secondary">
+                  סרטונים ייחודיים
                 </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+              </Box>
+              <Typography variant="h4" className={styles.statNumber}>
+                {stats?.uniqueVideos || 0}
+              </Typography>
+            </CardContent>
+          </Card>
 
-          <Grid item xs={6} sm={3}>
-            <Card className={styles.statCard}>
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} mb={1}>
-                  <TodayIcon color="success" />
-                  <Typography variant="body2" color="text.secondary">
-                    השמעות היום
-                  </Typography>
-                </Box>
-                <Typography variant="h4" className={styles.statNumber}>
-                  {stats?.todayPlays || 0}
+          <Card className={styles.statCard}>
+            <CardContent>
+              <Box display="flex" alignItems="center" gap={1} mb={1}>
+                <TodayIcon color="success" />
+                <Typography variant="body2" color="text.secondary">
+                  השמעות היום
                 </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+              </Box>
+              <Typography variant="h4" className={styles.statNumber}>
+                {stats?.todayPlays || 0}
+              </Typography>
+            </CardContent>
+          </Card>
 
-          <Grid item xs={6} sm={3}>
-            <Card className={styles.statCard}>
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} mb={1}>
-                  <HistoryIcon color="info" />
-                  <Typography variant="body2" color="text.secondary">
-                    ממוצע ליום
-                  </Typography>
-                </Box>
-                <Typography variant="h4" className={styles.statNumber}>
-                  {stats?.totalPlays && stats?.firstPlayDate
-                    ? Math.round(
-                        stats.totalPlays /
-                          Math.max(
-                            1,
-                            Math.ceil(
-                              (new Date().getTime() - new Date(stats.firstPlayDate).getTime()) /
-                                (1000 * 60 * 60 * 24)
-                            )
+          <Card className={styles.statCard}>
+            <CardContent>
+              <Box display="flex" alignItems="center" gap={1} mb={1}>
+                <HistoryIcon color="info" />
+                <Typography variant="body2" color="text.secondary">
+                  ממוצע ליום
+                </Typography>
+              </Box>
+              <Typography variant="h4" className={styles.statNumber}>
+                {stats?.totalPlays && stats?.firstPlayDate
+                  ? Math.round(
+                      stats.totalPlays /
+                        Math.max(
+                          1,
+                          Math.ceil(
+                            (new Date().getTime() - new Date(stats.firstPlayDate).getTime()) /
+                              (1000 * 60 * 60 * 24)
                           )
-                      )
-                    : 0}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+                        )
+                    )
+                  : 0}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Box>
 
         {/* Tabs for Top Videos and Recent Plays */}
         <Paper className={styles.tabsPaper}>

@@ -34,7 +34,16 @@
 }
 
 .statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
+}
+
+@media (min-width: 600px) {
+  .statsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .statCard {
