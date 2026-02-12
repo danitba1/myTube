@@ -101,8 +101,12 @@ export async function GET(request: NextRequest) {
         count: sql<number>`count(*)::int`,
       })
       .from(playedVideos)
-      .where(eq(playedVideos.clerkUserId, userId))
-      .where(sql`${playedVideos.playedAt} >= ${startOfToday}`);
+      .where(
+        and(
+          eq(playedVideos.clerkUserId, userId),
+          gte(playedVideos.playedAt, startOfToday)
+        )
+      );
 
     return NextResponse.json({ 
       type: "all",
