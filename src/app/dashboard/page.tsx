@@ -88,10 +88,39 @@ export default function DashboardPage() {
         20
       );
 
+      // If avoid duplicates is enabled, check if we have a pageToken for today's searches
+      let pageTokensMap: Record<string, string> = {};
+      if (avoidDuplicatesParam) {
+        try {
+          const tokenPromises = terms.map(async (term) => {
+            const tokenResponse = await fetch(
+              `/api/user/search-history?getPageToken=${encodeURIComponent(term)}`
+            );
+            if (tokenResponse.ok) {
+              const tokenData = await tokenResponse.json();
+              return { term, token: tokenData.pageToken };
+            }
+            return { term, token: null };
+          });
+          
+          const tokenResults = await Promise.all(tokenPromises);
+          tokenResults.forEach(({ term, token }) => {
+            if (token) {
+              pageTokensMap[term] = token;
+              console.log(`Using pagination for "${term}" - pageToken found`);
+            }
+          });
+        } catch (error) {
+          console.error("Failed to fetch page tokens:", error);
+          // Continue without page tokens if fetch fails
+        }
+      }
+
       const searchPromises = terms.map(async (term) => {
         const preferNewParam = preferNew ? "&preferNew=true" : "";
+        const pageTokenParam = pageTokensMap[term] ? `&pageToken=${encodeURIComponent(pageTokensMap[term])}` : "";
         const response = await fetch(
-          `/api/youtube/search?q=${encodeURIComponent(term)}&maxResults=${resultsPerTerm}${preferNewParam}`
+          `/api/youtube/search?q=${encodeURIComponent(term)}&maxResults=${resultsPerTerm}${preferNewParam}${pageTokenParam}`
         );
 
         if (!response.ok) {
@@ -100,11 +129,19 @@ export default function DashboardPage() {
         }
 
         const data = await response.json();
-        return data.videos as Video[];
+        return { videos: data.videos as Video[], nextPageToken: data.nextPageToken, term };
       });
 
       const allResults = await Promise.all(searchPromises);
-      const combinedVideos = allResults.flat();
+      
+      // Extract videos and collect pageTokens for saving
+      const combinedVideos = allResults.flatMap(result => result.videos);
+      const pageTokensForHistory: Record<string, string> = {};
+      allResults.forEach(result => {
+        if (result.nextPageToken) {
+          pageTokensForHistory[result.term] = result.nextPageToken;
+        }
+      });
 
       const uniqueVideos = combinedVideos.filter(
         (video, index, self) =>
@@ -141,6 +178,7 @@ export default function DashboardPage() {
               searchQuery: query,
               searchTerms: terms,
               resultsCount: shuffledVideos.length,
+              pageTokens: pageTokensForHistory, // Save pageTokens for each term
             }),
           });
           
@@ -171,17 +209,60 @@ export default function DashboardPage() {
     ? videos.findIndex((v) => v.id === selectedVideo.id) 
     : -1;
 
+  // Calculate if there are available videos before/after current
+  const hasPrevious = currentIndex > 0 && (
+    !avoidDuplicates || 
+    videos.slice(0, currentIndex).some(v => !playedVideoIds.includes(v.id))
+  );
+  
+  const hasNext = currentIndex >= 0 && currentIndex < videos.length - 1 && (
+    !avoidDuplicates || 
+    videos.slice(currentIndex + 1).some(v => !playedVideoIds.includes(v.id))
+  );
+
   const handlePrevious = useCallback(() => {
-    if (currentIndex > 0) {
+    if (currentIndex <= 0 || videos.length === 0) return;
+    
+    // If avoid duplicates is disabled, just go to the previous video
+    if (!avoidDuplicates) {
       setSelectedVideo(videos[currentIndex - 1]);
+      return;
     }
-  }, [currentIndex, videos]);
+    
+    // If avoid duplicates is enabled, find the next non-played video
+    let nextIndex = currentIndex - 1;
+    while (nextIndex >= 0) {
+      const video = videos[nextIndex];
+      if (!playedVideoIds.includes(video.id)) {
+        setSelectedVideo(video);
+        return;
+      }
+      nextIndex--;
+    }
+    // If no unplayed video found, don't change selection
+  }, [currentIndex, videos, avoidDuplicates, playedVideoIds]);
 
   const handleNext = useCallback(() => {
-    if (currentIndex < videos.length - 1) {
+    if (currentIndex < 0 || currentIndex >= videos.length - 1 || videos.length === 0) return;
+    
+    // If avoid duplicates is disabled, just go to the next video
+    if (!avoidDuplicates) {
       setSelectedVideo(videos[currentIndex + 1]);
+      return;
     }
-  }, [currentIndex, videos]);
+    
+    // If avoid duplicates is enabled, find the next non-played video
+    let nextIndex = currentIndex + 1;
+    while (nextIndex < videos.length) {
+      const video = videos[nextIndex];
+      if (!playedVideoIds.includes(video.id)) {
+        setSelectedVideo(video);
+        return;
+      }
+      nextIndex++;
+    }
+    // If no unplayed video found, don't change selection
+  }, [currentIndex, videos, avoidDuplicates, playedVideoIds]);
 
   const handleReshuffle = useCallback(() => {
     if (videos.length > 0) {
@@ -299,8 +380,8 @@ export default function DashboardPage() {
               onNext={handleNext}
               onAlwaysSkip={handleAlwaysSkip}
               onVideoPlayed={handleVideoPlayed}
-              hasPrevious={currentIndex > 0}
-              hasNext={currentIndex < videos.length - 1 && currentIndex >= 0}
+              hasPrevious={hasPrevious}
+              hasNext={hasNext}
             />
           </Box>
 

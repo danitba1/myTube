@@ -19,6 +19,7 @@ export const searchHistory = pgTable("search_history", {
   searchTerms: jsonb("search_terms").$type<string[]>().default([]),
   resultsCount: integer("results_count").default(0),
   isSingle: boolean("is_single").default(false).notNull(), // true = single term from comma-separated list
+  pageTokens: jsonb("page_tokens").$type<Record<string, string>>(), // Map of term -> nextPageToken for pagination
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

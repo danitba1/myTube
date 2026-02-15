@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const favouritesOnly = searchParams.get("favourites") === "true";
     const favouritesLimit = parseInt(searchParams.get("limit") || "20", 10);
+    const getPageToken = searchParams.get("getPageToken"); // Get page token for a specific query today
 
     // If favouritesOnly, return only single terms (for the "my recent favourites" feature)
     if (favouritesOnly) {
@@ -51,6 +52,49 @@ export async function GET(request: NextRequest) {
       }
 
       return NextResponse.json({ favourites });
+    }
+
+    // If getPageToken is provided, return the most recent pageToken for that term today
+    if (getPageToken) {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+
+      // Search in full searches where this term was used
+      const todaySearches = await db
+        .select()
+        .from(searchHistory)
+        .where(
+          and(
+            eq(searchHistory.clerkUserId, userId),
+            eq(searchHistory.isSingle, false),
+            sql`${searchHistory.createdAt} >= ${startOfToday}`
+          )
+        )
+        .orderBy(desc(searchHistory.createdAt))
+        .limit(10); // Get recent searches from today
+
+      // Look for the pageToken for this specific term
+      for (const search of todaySearches) {
+        if (search.pageTokens && typeof search.pageTokens === 'object') {
+          const tokens = search.pageTokens as Record<string, string>;
+          const termLower = getPageToken.toLowerCase();
+          
+          // Check if this term exists in the pageTokens map (case-insensitive)
+          for (const [savedTerm, token] of Object.entries(tokens)) {
+            if (savedTerm.toLowerCase() === termLower && token) {
+              return NextResponse.json({ 
+                pageToken: token,
+                found: true
+              });
+            }
+          }
+        }
+      }
+
+      return NextResponse.json({ 
+        pageToken: null,
+        found: false
+      });
     }
 
     // Get full searches (isSingle=false) - last 5 unique
@@ -135,7 +179,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { searchQuery, searchTerms, resultsCount } = body;
+    const { searchQuery, searchTerms, resultsCount, pageTokens } = body;
 
     if (!searchQuery) {
       return NextResponse.json(
@@ -152,6 +196,7 @@ export async function POST(request: NextRequest) {
         searchQuery,
         searchTerms: searchTerms || [],
         resultsCount: resultsCount || 0,
+        pageTokens: pageTokens || null,
         isSingle: false,
       })
       .returning();

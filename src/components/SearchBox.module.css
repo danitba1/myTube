@@ -241,14 +241,18 @@
   margin-top: var(--spacing-xs);
   padding-inline: var(--spacing-xs);
   gap: var(--spacing-xs);
+  flex-wrap: wrap;
 }
 
 /* Checkboxes Group - holds multiple checkboxes */
 .checkboxesGroup {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 @media (min-width: 600px) {
@@ -260,11 +264,13 @@
 /* Prefer New Checkbox */
 .preferNewLabel {
   margin: 0;
+  white-space: nowrap;
 }
 
 .preferNewLabel :global(.MuiFormControlLabel-label) {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 @media (min-width: 600px) {

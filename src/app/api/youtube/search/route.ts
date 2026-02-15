@@ -13,11 +13,55 @@ export interface YouTubeSearchResult {
   publishedAt: string;
 }
 
+// Helper function to fetch with retry logic
+async function fetchWithRetry(
+  url: string,
+  maxRetries = 3,
+  timeoutMs = 10000
+): Promise<Response> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      const response = await fetch(url, {
+        signal: controller.signal,
+        // Add keepalive header to help with connection stability
+        headers: {
+          'Connection': 'keep-alive',
+        },
+      });
+
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error: any) {
+      const isLastAttempt = attempt === maxRetries;
+      const isRetryableError = 
+        error.code === 'ECONNRESET' || 
+        error.code === 'ETIMEDOUT' ||
+        error.name === 'AbortError' ||
+        error.message?.includes('fetch failed');
+
+      if (isLastAttempt || !isRetryableError) {
+        throw error;
+      }
+
+      // Exponential backoff: wait 1s, 2s, 4s between retries
+      const delayMs = Math.pow(2, attempt) * 1000;
+      console.log(`Fetch attempt ${attempt + 1} failed, retrying in ${delayMs}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+  
+  throw new Error('Fetch failed after retries');
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get("q");
   const maxResults = searchParams.get("maxResults") || "20";
   const preferNew = searchParams.get("preferNew") === "true"; // Filter to last 3 years
+  const pageToken = searchParams.get("pageToken"); // For pagination
 
   if (!query) {
     return NextResponse.json(
@@ -42,6 +86,11 @@ export async function GET(request: NextRequest) {
     searchUrl.searchParams.set("maxResults", maxResults);
     searchUrl.searchParams.set("key", YOUTUBE_API_KEY);
     
+    // Add pageToken if provided (for pagination)
+    if (pageToken) {
+      searchUrl.searchParams.set("pageToken", pageToken);
+    }
+    
     // If preferNew is true, filter to videos from the last 3 years (keeps relevance sorting)
     if (preferNew) {
       const threeYearsAgo = new Date();
@@ -53,7 +102,7 @@ export async function GET(request: NextRequest) {
 
     console.log("YouTube API URL:", searchUrl.toString().replace(YOUTUBE_API_KEY, "API_KEY_HIDDEN"));
     
-    const searchResponse = await fetch(searchUrl.toString());
+    const searchResponse = await fetchWithRetry(searchUrl.toString());
     
     if (!searchResponse.ok) {
       const errorData = await searchResponse.json();
@@ -77,7 +126,7 @@ export async function GET(request: NextRequest) {
     statsUrl.searchParams.set("id", videoIds);
     statsUrl.searchParams.set("key", YOUTUBE_API_KEY);
 
-    const statsResponse = await fetch(statsUrl.toString());
+    const statsResponse = await fetchWithRetry(statsUrl.toString());
     const statsData = await statsResponse.json();
 
     // Create a map of video stats
@@ -110,11 +159,25 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ videos });
-  } catch (error) {
+    return NextResponse.json({ 
+      videos,
+      nextPageToken: searchData.nextPageToken || null 
+    });
+  } catch (error: any) {
     console.error("YouTube search error:", error);
+    
+    // Provide more specific error messages
+    let errorMessage = "Internal server error";
+    if (error.code === 'ECONNRESET') {
+      errorMessage = "Connection to YouTube API was reset. Please try again.";
+    } else if (error.code === 'ETIMEDOUT' || error.name === 'AbortError') {
+      errorMessage = "Request to YouTube API timed out. Please try again.";
+    } else if (error.message?.includes('fetch failed')) {
+      errorMessage = "Failed to connect to YouTube API. Please check your network connection.";
+    }
+    
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
