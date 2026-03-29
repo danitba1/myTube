@@ -86,6 +86,12 @@ export async function GET(request: NextRequest) {
     searchUrl.searchParams.set("maxResults", maxResults);
     searchUrl.searchParams.set("key", YOUTUBE_API_KEY);
     
+    // Filter for embeddable videos only (prevents error 101/150: video not embeddable)
+    searchUrl.searchParams.set("videoEmbeddable", "true");
+    
+    // Filter for videos that can be syndicated (helps avoid region restrictions)
+    searchUrl.searchParams.set("videoSyndicated", "true");
+    
     // Add pageToken if provided (for pagination)
     if (pageToken) {
       searchUrl.searchParams.set("pageToken", pageToken);

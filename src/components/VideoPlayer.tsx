@@ -218,11 +218,11 @@ export default function VideoPlayer({
       if (bufferingTimeoutRef.current) {
         clearTimeout(bufferingTimeoutRef.current);
       }
-      // If buffering for too long (15 seconds), skip the video
+      // If buffering for too long (10 seconds), skip the video
       bufferingTimeoutRef.current = setTimeout(() => {
         console.warn(`Video stuck buffering: ${videoRef.current?.title}`);
         skipToNextVideo();
-      }, 15000);
+      }, 10000);
     } else {
       // Clear buffering timeout if we're no longer buffering
       if (bufferingTimeoutRef.current) {
@@ -406,13 +406,13 @@ export default function VideoPlayer({
           },
         });
         
-        // Set a timeout to skip if video doesn't start playing within 12 seconds
+        // Set a timeout to skip if video doesn't start playing within 8 seconds
         playbackTimeoutRef.current = setTimeout(() => {
           if (!hasStartedPlayingRef.current && !isSkippingRef.current) {
-            console.warn(`Video failed to start within 12 seconds: ${videoRef.current?.title}`);
+            console.warn(`Video failed to start within 8 seconds: ${videoRef.current?.title}`);
             skipToNextVideo();
           }
-        }, 12000);
+        }, 8000);
         
       } catch (err) {
         console.error('Failed to create YouTube player:', err);
@@ -432,10 +432,10 @@ export default function VideoPlayer({
         // Set a timeout for API loading - if it takes too long, skip
         playbackTimeoutRef.current = setTimeout(() => {
           if (!window.YT || !window.YT.Player) {
-            console.warn('YouTube API failed to load within 15 seconds');
+            console.warn('YouTube API failed to load within 10 seconds');
             skipToNextVideo();
           }
-        }, 15000);
+        }, 10000);
       }
 
       window.onYouTubeIframeAPIReady = () => {
