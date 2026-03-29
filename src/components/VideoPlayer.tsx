@@ -164,11 +164,9 @@ export default function VideoPlayer({
     // Clear any pending timeouts
     clearAllTimeouts();
     
-    // Mark this video as "always skip" so it won't appear in future searches
-    if (onAlwaysSkipRef.current) {
-      onAlwaysSkipRef.current();
-    } else if (hasNextRef.current && onNextRef.current) {
-      // Fallback: just skip to next if onAlwaysSkip not available
+    // Just move to next video without adding to skip list
+    // Only the "Always Skip" button should add videos to the permanent skip list
+    if (hasNextRef.current && onNextRef.current) {
       onNextRef.current();
     }
     

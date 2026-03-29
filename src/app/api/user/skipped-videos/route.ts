@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE - Remove video from skip list
+// DELETE - Remove video(s) from skip list
 export async function DELETE(request: NextRequest) {
   try {
     const { userId } = await auth();
@@ -109,10 +109,26 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const videoId = searchParams.get("videoId");
+    const clearAll = searchParams.get("clearAll") === "true";
 
+    // If clearAll is true, delete all skipped videos for this user
+    if (clearAll) {
+      const result = await db
+        .delete(skippedVideos)
+        .where(eq(skippedVideos.clerkUserId, userId))
+        .returning();
+
+      return NextResponse.json({ 
+        success: true, 
+        message: `Cleared ${result.length} skipped videos`,
+        count: result.length
+      });
+    }
+
+    // Otherwise, delete a specific video
     if (!videoId) {
       return NextResponse.json(
-        { error: "Video ID is required" },
+        { error: "Video ID is required when clearAll is not specified" },
         { status: 400 }
       );
     }
