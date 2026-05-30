@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Paper,
   IconButton,
@@ -44,6 +44,8 @@ interface SearchBoxProps {
 export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: SearchBoxProps) {
   const [query, setQuery] = useState("");
   const hasSetInitialValue = useRef(false);
+  // Tracks whether the current query was filled by "Search All" so manual search also bypasses the 10-term limit
+  const isSearchAllQuery = useRef(false);
 
   // Set initial value only once on mount
   useEffect(() => {
@@ -58,6 +60,7 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(true);
   const [isLoadingFavourites, setIsLoadingFavourites] = useState(false);
   const [showMoreFullHistory, setShowMoreFullHistory] = useState(false);
+  const [showMoreSingleHistory, setShowMoreSingleHistory] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [allDrawerTerms, setAllDrawerTerms] = useState<string[]>([]);
   const [isLoadingDrawerTerms, setIsLoadingDrawerTerms] = useState(false);
@@ -123,14 +126,18 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
     fetchPlaylists();
   }, []);
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     if (onSearch && query.trim()) {
       const trimmedQuery = query.trim();
       const terms = trimmedQuery.split(",").map(t => t.trim()).filter(t => t.length > 0);
       addToHistory(trimmedQuery, terms, undefined, true);
-      onSearch(trimmedQuery, preferNew, false, avoidDuplicates);
+      // Carry the Search All flag if the query was populated by the Search All button,
+      // then reset it so subsequent manual edits use the normal 10-term limit.
+      const searchAllFlag = isSearchAllQuery.current;
+      isSearchAllQuery.current = false;
+      onSearch(trimmedQuery, preferNew, false, avoidDuplicates, searchAllFlag);
     }
-  };
+  }, [onSearch, query, preferNew, avoidDuplicates, addToHistory]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -166,9 +173,18 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
     }
   };
 
-  // Handle clicking a single term from the drawer — keep drawer open for multi-select
+  // Handle clicking a single term from the drawer — toggles: add if not in query, remove if already in
   const handleDrawerTermClick = (term: string) => {
-    handleHistoryClick(term);
+    const termLower = term.toLowerCase().trim();
+    const currentTerms = query.split(",").map((t) => t.trim()).filter(Boolean);
+    const isSelected = currentTerms.some((t) => t.toLowerCase() === termLower);
+
+    if (isSelected) {
+      const updated = currentTerms.filter((t) => t.toLowerCase() !== termLower);
+      setQuery(updated.join(", "));
+    } else {
+      setQuery(query.trim() ? query.trim() + ", " + term : term);
+    }
   };
 
   // Fetch ALL single history terms from DB when drawer opens
@@ -206,6 +222,7 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
     const selectedTerms = shuffled.slice(0, Math.min(20, shuffled.length));
 
     const combinedQuery = selectedTerms.join(", ");
+    isSearchAllQuery.current = true; // Mark so manual search button also bypasses the 10-term limit
     setQuery(combinedQuery);
     setDrawerOpen(false);
 
@@ -229,7 +246,7 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
         <input
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => { setQuery(e.target.value); isSearchAllQuery.current = false; }}
           onKeyDown={handleKeyDown}
           placeholder="חפש סרטונים..."
           className={styles.searchInput}
@@ -451,34 +468,76 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
               />
             )}
             
-            {/* Single terms (pink/purple) - deduplicated */}
+            {/* Single terms (pink/purple) - deduplicated, first 10 visible, up to 10 more on expand */}
             {(() => {
               const seen = new Set<string>();
-              return singleHistory.filter((item) => {
-                // Normalize: lowercase, trim, remove zero-width chars, collapse whitespace
+              const uniqueTerms = singleHistory.filter((item) => {
                 const normalized = item
                   .normalize('NFC')
                   .toLowerCase()
                   .trim()
-                  .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '') // Remove zero-width and non-breaking spaces
+                  .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '')
                   .replace(/\s+/g, ' ');
                 if (!normalized || seen.has(normalized)) return false;
                 seen.add(normalized);
                 return true;
-              }).map((item, index) => (
-                <Chip
-                  key={`single-${index}`}
-                  label={item.trim()}
-                  size="small"
-                  onClick={() => handleHistoryClick(item)}
-                  onDelete={() => removeFromHistory(item, true)}
-                  deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
-                  className={styles.singleHistoryChip}
-                  classes={{
-                    label: styles.chipLabel,
-                  }}
-                />
-              ));
+              });
+
+              const VISIBLE_SINGLE = 10;
+              const visibleTerms = uniqueTerms.slice(0, VISIBLE_SINGLE);
+              const extraTerms = uniqueTerms.slice(VISIBLE_SINGLE, VISIBLE_SINGLE * 2);
+              const hasMore = uniqueTerms.length > VISIBLE_SINGLE;
+
+              return (
+                <>
+                  {visibleTerms.map((item, index) => (
+                    <Chip
+                      key={`single-${index}`}
+                      label={item.trim()}
+                      size="small"
+                      onClick={() => handleHistoryClick(item)}
+                      onDelete={() => removeFromHistory(item, true)}
+                      deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
+                      className={styles.singleHistoryChip}
+                      classes={{ label: styles.chipLabel }}
+                    />
+                  ))}
+
+                  {/* Expand button — shown when there are more than 10 and not yet expanded */}
+                  {hasMore && !showMoreSingleHistory && (
+                    <Chip
+                      label={<AddIcon className={styles.expandIcon} />}
+                      size="small"
+                      onClick={() => setShowMoreSingleHistory(true)}
+                      className={styles.expandChip}
+                    />
+                  )}
+
+                  {/* Extra terms (up to 10 more) when expanded */}
+                  {showMoreSingleHistory && extraTerms.map((item, index) => (
+                    <Chip
+                      key={`single-more-${index}`}
+                      label={item.trim()}
+                      size="small"
+                      onClick={() => handleHistoryClick(item)}
+                      onDelete={() => removeFromHistory(item, true)}
+                      deleteIcon={<CloseIcon className={styles.chipDeleteIcon} />}
+                      className={styles.singleHistoryChip}
+                      classes={{ label: styles.chipLabel }}
+                    />
+                  ))}
+
+                  {/* Collapse button */}
+                  {showMoreSingleHistory && hasMore && (
+                    <Chip
+                      label="הסתר"
+                      size="small"
+                      onClick={() => setShowMoreSingleHistory(false)}
+                      className={styles.collapseChip}
+                    />
+                  )}
+                </>
+              );
             })()}
           </Box>
         </Box>
