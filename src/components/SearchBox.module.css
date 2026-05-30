@@ -551,6 +551,52 @@
   border-color: #e91e63;
 }
 
+/* Expand/Collapse chips specifically for single-history (pink theme) */
+.expandSingleChip {
+  background-color: #f3e5f5;
+  border: 1px solid #ce93d8;
+  transition: all var(--transition-base);
+  cursor: pointer;
+  height: 24px;
+  color: #7b1fa2;
+  font-weight: 600;
+  min-width: 32px;
+}
+
+@media (min-width: 600px) {
+  .expandSingleChip {
+    height: 28px;
+    min-width: 36px;
+  }
+}
+
+.expandSingleChip:hover {
+  background-color: #e1bee7;
+  border-color: #9c27b0;
+}
+
+.collapseSingleChip {
+  background-color: #f3e5f5;
+  border: 1px solid #ce93d8;
+  transition: all var(--transition-base);
+  cursor: pointer;
+  height: 24px;
+  color: #7b1fa2;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+@media (min-width: 600px) {
+  .collapseSingleChip {
+    height: 28px;
+  }
+}
+
+.collapseSingleChip:hover {
+  background-color: #e1bee7;
+  border-color: #9c27b0;
+}
+
 /* Hamburger Menu - Mobile Only */
 .hamburgerButton {
   padding: 8px;

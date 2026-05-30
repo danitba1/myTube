@@ -503,13 +503,13 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
                     />
                   ))}
 
-                  {/* Expand button — shown when there are more than 10 and not yet expanded */}
+                  {/* Pink expand button — shown when there are more than 10 */}
                   {hasMore && !showMoreSingleHistory && (
                     <Chip
                       label={<AddIcon className={styles.expandIcon} />}
                       size="small"
                       onClick={() => setShowMoreSingleHistory(true)}
-                      className={styles.expandChip}
+                      className={styles.expandSingleChip}
                     />
                   )}
 
@@ -527,13 +527,13 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
                     />
                   ))}
 
-                  {/* Collapse button */}
+                  {/* Pink collapse button */}
                   {showMoreSingleHistory && hasMore && (
                     <Chip
                       label="הסתר"
                       size="small"
                       onClick={() => setShowMoreSingleHistory(false)}
-                      className={styles.collapseChip}
+                      className={styles.collapseSingleChip}
                     />
                   )}
                 </>
