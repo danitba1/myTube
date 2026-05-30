@@ -5,7 +5,6 @@ import { useUser } from "@clerk/nextjs";
 
 const LOCAL_STORAGE_KEY = "mytube_search_history";
 const MAX_FULL_HISTORY = 5;
-const MAX_SINGLE_HISTORY = 10;
 
 export function useSearchHistory() {
   const { isSignedIn, isLoaded } = useUser();
@@ -72,7 +71,7 @@ export function useSearchHistory() {
       return [query, ...filtered].slice(0, MAX_FULL_HISTORY);
     });
 
-    // Also update single history for each term
+    // Also update single history for each term (no cap — show all unique terms ever searched)
     if (searchTerms && searchTerms.length > 1) {
       setSingleHistory((prev) => {
         let updated = [...prev];
@@ -84,7 +83,7 @@ export function useSearchHistory() {
           );
           updated = [trimmed, ...updated];
         }
-        return updated.slice(0, MAX_SINGLE_HISTORY);
+        return updated;
       });
     }
 
@@ -166,7 +165,7 @@ export function useSearchHistory() {
 
   return {
     fullHistory,      // Last 5 full searches
-    singleHistory,    // Last 10 single terms
+    singleHistory,    // All unique single terms ever searched
     isLoading,
     addToHistory,
     removeFromHistory,

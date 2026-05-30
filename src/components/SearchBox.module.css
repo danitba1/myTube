@@ -638,3 +638,8 @@
   font-style: italic;
 }
 
+.drawerCheckbox {
+  padding: 4px 8px 4px 0;
+  color: var(--color-primary);
+}
+
