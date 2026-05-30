@@ -24,6 +24,7 @@ function shuffleArray<T>(array: T[]): T[] {
 
 const MAX_SEARCH_TERMS = 10;
 const MAX_FAVOURITES_TERMS = 20;
+const MAX_SEARCH_ALL_TERMS = 20;
 
 export default function DashboardPage() {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -42,7 +43,7 @@ export default function DashboardPage() {
   // Get initial search value from history (last search)
   const initialSearchValue = !isHistoryLoading && fullHistory.length > 0 ? fullHistory[0] : "";
 
-  const handleSearch = useCallback(async (query: string, preferNew?: boolean, isFavourites?: boolean, avoidDuplicatesParam: boolean = true) => {
+  const handleSearch = useCallback(async (query: string, preferNew?: boolean, isFavourites?: boolean, avoidDuplicatesParam: boolean = true, isSearchAll?: boolean) => {
     if (!query.trim()) return;
     
     // Update the avoidDuplicates state
@@ -66,8 +67,8 @@ export default function DashboardPage() {
       return true;
     });
 
-    // Use higher limit for favourites, regular limit otherwise
-    const maxTerms = isFavourites ? MAX_FAVOURITES_TERMS : MAX_SEARCH_TERMS;
+    // Use higher limit for favourites and search all, regular limit otherwise
+    const maxTerms = isFavourites ? MAX_FAVOURITES_TERMS : (isSearchAll ? MAX_SEARCH_ALL_TERMS : MAX_SEARCH_TERMS);
     
     // Limit to max terms and show warning if exceeded
     if (terms.length > maxTerms) {

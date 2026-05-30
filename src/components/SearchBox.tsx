@@ -10,6 +10,13 @@ import {
   Checkbox,
   FormControlLabel,
   Button,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Divider,
+  Typography,
 } from "@mui/material";
 import { 
   Search as SearchIcon, 
@@ -17,6 +24,8 @@ import {
   Close as CloseIcon,
   Favorite as FavoriteIcon,
   Add as AddIcon,
+  Menu as MenuIcon,
+  Shuffle as ShuffleIcon,
 } from "@mui/icons-material";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import styles from "./SearchBox.module.css";
@@ -27,7 +36,7 @@ interface Playlist {
 }
 
 interface SearchBoxProps {
-  onSearch?: (query: string, preferNew?: boolean, isFavourites?: boolean, avoidDuplicates?: boolean) => void;
+  onSearch?: (query: string, preferNew?: boolean, isFavourites?: boolean, avoidDuplicates?: boolean, isSearchAll?: boolean) => void;
   onPlaylistSelect?: (playlistId: string) => void;
   initialValue?: string;
 }
@@ -49,6 +58,7 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(true);
   const [isLoadingFavourites, setIsLoadingFavourites] = useState(false);
   const [showMoreFullHistory, setShowMoreFullHistory] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const { 
     fullHistory,
     singleHistory,
@@ -154,9 +164,74 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
     }
   };
 
+  // Handle clicking a single term from the drawer
+  const handleDrawerTermClick = (term: string) => {
+    handleHistoryClick(term);
+    setDrawerOpen(false);
+  };
+
+  // Handle "Search All" - randomly select 20 terms and search
+  const handleSearchAll = () => {
+    // Get unique single history terms
+    const seen = new Set<string>();
+    const uniqueTerms = singleHistory.filter((item) => {
+      const normalized = item
+        .normalize('NFC')
+        .toLowerCase()
+        .trim()
+        .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '')
+        .replace(/\s+/g, ' ');
+      if (!normalized || seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
+
+    if (uniqueTerms.length === 0) {
+      return;
+    }
+
+    // Shuffle and take up to 20 random terms
+    const shuffled = [...uniqueTerms].sort(() => Math.random() - 0.5);
+    const selectedTerms = shuffled.slice(0, Math.min(20, shuffled.length));
+    
+    const combinedQuery = selectedTerms.join(", ");
+    setQuery(combinedQuery);
+    setDrawerOpen(false);
+    
+    // Trigger search with isSearchAll=true to bypass 10-term limit
+    if (onSearch) {
+      onSearch(combinedQuery, preferNew, false, avoidDuplicates, true);
+    }
+  };
+
+  // Get unique single history for drawer
+  const uniqueSingleHistory = (() => {
+    const seen = new Set<string>();
+    return singleHistory.filter((item) => {
+      const normalized = item
+        .normalize('NFC')
+        .toLowerCase()
+        .trim()
+        .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '')
+        .replace(/\s+/g, ' ');
+      if (!normalized || seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
+  })();
+
   return (
     <Box className={styles.container}>
       <Paper elevation={0} className={styles.searchWrapper}>
+        {/* Hamburger menu icon - mobile only */}
+        <IconButton 
+          onClick={() => setDrawerOpen(true)} 
+          className={styles.hamburgerButton}
+          aria-label="פתח תפריט היסטוריה"
+        >
+          <MenuIcon className={styles.hamburgerIcon} />
+        </IconButton>
+
         <input
           type="text"
           value={query}
@@ -180,6 +255,67 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
           <SearchIcon className={styles.searchIcon} />
         </IconButton>
       </Paper>
+
+      {/* Mobile Drawer with search history */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        className={styles.drawer}
+      >
+        <Box className={styles.drawerContent}>
+          <Box className={styles.drawerHeader}>
+            <Typography variant="h6" className={styles.drawerTitle}>
+              היסטוריית חיפוש
+            </Typography>
+            <IconButton onClick={() => setDrawerOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          
+          <Divider />
+
+          {/* Search All Button */}
+          {uniqueSingleHistory.length > 0 && (
+            <Box className={styles.drawerSearchAllContainer}>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<ShuffleIcon />}
+                onClick={handleSearchAll}
+                className={styles.searchAllButton}
+              >
+                חפש הכל ({Math.min(20, uniqueSingleHistory.length)} ערכים אקראיים)
+              </Button>
+            </Box>
+          )}
+
+          <Divider />
+
+          {/* List of all single history items */}
+          <List className={styles.drawerList}>
+            {uniqueSingleHistory.length === 0 ? (
+              <ListItem>
+                <ListItemText 
+                  primary="אין היסטוריית חיפוש"
+                  className={styles.emptyListText}
+                />
+              </ListItem>
+            ) : (
+              uniqueSingleHistory.map((term, index) => (
+                <ListItem key={`drawer-term-${index}`} disablePadding>
+                  <ListItemButton onClick={() => handleDrawerTermClick(term)}>
+                    <ListItemText 
+                      primary={term}
+                      className={styles.drawerListItemText}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))
+            )}
+          </List>
+        </Box>
+      </Drawer>
 
       {/* Prefer New Checkbox + Avoid Duplicates Checkbox + Favourites Button - same row */}
       <Box className={styles.checkboxRow}>
