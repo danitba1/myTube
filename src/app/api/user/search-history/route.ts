@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     const favouritesOnly = searchParams.get("favourites") === "true";
     const favouritesLimit = parseInt(searchParams.get("limit") || "20", 10);
     const getPageToken = searchParams.get("getPageToken"); // Get page token for a specific query today
+    const allSingleTerms = searchParams.get("allSingleTerms") === "true"; // Return ALL unique single terms for drawer
 
     // If favouritesOnly, return only single terms (for the "my recent favourites" feature)
     if (favouritesOnly) {
@@ -52,6 +53,37 @@ export async function GET(request: NextRequest) {
       }
 
       return NextResponse.json({ favourites });
+    }
+
+    // Return ALL unique single history terms (for the hamburger drawer)
+    if (allSingleTerms) {
+      const allTerms = await db
+        .select()
+        .from(searchHistory)
+        .where(
+          and(
+            eq(searchHistory.clerkUserId, userId),
+            eq(searchHistory.isSingle, true)
+          )
+        )
+        .orderBy(desc(searchHistory.createdAt));
+
+      const seen = new Set<string>();
+      const terms: string[] = [];
+      for (const entry of allTerms) {
+        const normalized = entry.searchQuery
+          .normalize('NFC')
+          .toLowerCase()
+          .trim()
+          .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '')
+          .replace(/\s+/g, ' ');
+        if (normalized && !seen.has(normalized)) {
+          seen.add(normalized);
+          terms.push(entry.searchQuery.trim());
+        }
+      }
+
+      return NextResponse.json({ terms });
     }
 
     // If getPageToken is provided, return the most recent pageToken for that term today
@@ -121,7 +153,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get single terms (isSingle=true) - last 10 unique
+    // Get ALL single terms (isSingle=true) - all unique ever searched
     const singleTerms = await db
       .select()
       .from(searchHistory)
@@ -131,8 +163,7 @@ export async function GET(request: NextRequest) {
           eq(searchHistory.isSingle, true)
         )
       )
-      .orderBy(desc(searchHistory.createdAt))
-      .limit(100); // Fetch more to ensure we get 10 unique after dedup
+      .orderBy(desc(searchHistory.createdAt));
 
     const seenSingle = new Set<string>();
     const singleHistory: string[] = [];
@@ -147,13 +178,12 @@ export async function GET(request: NextRequest) {
       if (normalized && !seenSingle.has(normalized)) {
         seenSingle.add(normalized);
         singleHistory.push(entry.searchQuery.trim());
-        if (singleHistory.length >= 10) break;
       }
     }
 
     return NextResponse.json({ 
       fullHistory,    // Last 5 full searches (isSingle=false)
-      singleHistory,  // Last 10 single terms (isSingle=true)
+      singleHistory,  // All unique single terms ever searched (isSingle=true)
       // Keep legacy format for backwards compatibility
       history: fullHistory 
     });

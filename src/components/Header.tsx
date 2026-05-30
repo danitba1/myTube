@@ -26,7 +26,7 @@ const SearchBox = dynamic(() => import("./SearchBox"), {
 });
 
 interface HeaderProps {
-  onSearch?: (query: string, preferNew?: boolean, isFavourites?: boolean) => void;
+  onSearch?: (query: string, preferNew?: boolean, isFavourites?: boolean, avoidDuplicates?: boolean, isSearchAll?: boolean) => void;
   onPlaylistSelect?: (playlistId: string) => void;
   initialSearchValue?: string;
 }

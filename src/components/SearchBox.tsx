@@ -59,6 +59,8 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
   const [isLoadingFavourites, setIsLoadingFavourites] = useState(false);
   const [showMoreFullHistory, setShowMoreFullHistory] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [allDrawerTerms, setAllDrawerTerms] = useState<string[]>([]);
+  const [isLoadingDrawerTerms, setIsLoadingDrawerTerms] = useState(false);
   const { 
     fullHistory,
     singleHistory,
@@ -164,68 +166,60 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
     }
   };
 
-  // Handle clicking a single term from the drawer
+  // Handle clicking a single term from the drawer — keep drawer open for multi-select
   const handleDrawerTermClick = (term: string) => {
     handleHistoryClick(term);
-    setDrawerOpen(false);
   };
 
-  // Handle "Search All" - randomly select 20 terms and search
-  const handleSearchAll = () => {
-    // Get unique single history terms
-    const seen = new Set<string>();
-    const uniqueTerms = singleHistory.filter((item) => {
-      const normalized = item
-        .normalize('NFC')
-        .toLowerCase()
-        .trim()
-        .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '')
-        .replace(/\s+/g, ' ');
-      if (!normalized || seen.has(normalized)) return false;
-      seen.add(normalized);
-      return true;
-    });
-
-    if (uniqueTerms.length === 0) {
-      return;
+  // Fetch ALL single history terms from DB when drawer opens
+  const handleOpenDrawer = async () => {
+    setDrawerOpen(true);
+    setIsLoadingDrawerTerms(true);
+    try {
+      const response = await fetch("/api/user/search-history?allSingleTerms=true");
+      if (response.ok) {
+        const data = await response.json();
+        setAllDrawerTerms(data.terms || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch all drawer terms:", error);
+      // Fallback to the in-memory list
+      const seen = new Set<string>();
+      const fallback = singleHistory.filter((item) => {
+        const n = item.normalize('NFC').toLowerCase().trim()
+          .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '').replace(/\s+/g, ' ');
+        if (!n || seen.has(n)) return false;
+        seen.add(n);
+        return true;
+      });
+      setAllDrawerTerms(fallback);
+    } finally {
+      setIsLoadingDrawerTerms(false);
     }
+  };
 
-    // Shuffle and take up to 20 random terms
-    const shuffled = [...uniqueTerms].sort(() => Math.random() - 0.5);
+  // Handle "Search All" — pick up to 20 random terms from full DB list
+  const handleSearchAll = () => {
+    if (allDrawerTerms.length === 0) return;
+
+    const shuffled = [...allDrawerTerms].sort(() => Math.random() - 0.5);
     const selectedTerms = shuffled.slice(0, Math.min(20, shuffled.length));
-    
+
     const combinedQuery = selectedTerms.join(", ");
     setQuery(combinedQuery);
     setDrawerOpen(false);
-    
-    // Trigger search with isSearchAll=true to bypass 10-term limit
+
     if (onSearch) {
       onSearch(combinedQuery, preferNew, false, avoidDuplicates, true);
     }
   };
-
-  // Get unique single history for drawer
-  const uniqueSingleHistory = (() => {
-    const seen = new Set<string>();
-    return singleHistory.filter((item) => {
-      const normalized = item
-        .normalize('NFC')
-        .toLowerCase()
-        .trim()
-        .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '')
-        .replace(/\s+/g, ' ');
-      if (!normalized || seen.has(normalized)) return false;
-      seen.add(normalized);
-      return true;
-    });
-  })();
 
   return (
     <Box className={styles.container}>
       <Paper elevation={0} className={styles.searchWrapper}>
         {/* Hamburger menu icon - mobile only */}
         <IconButton 
-          onClick={() => setDrawerOpen(true)} 
+          onClick={handleOpenDrawer} 
           className={styles.hamburgerButton}
           aria-label="פתח תפריט היסטוריה"
         >
@@ -276,7 +270,7 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
           <Divider />
 
           {/* Search All Button */}
-          {uniqueSingleHistory.length > 0 && (
+          {allDrawerTerms.length > 0 && (
             <Box className={styles.drawerSearchAllContainer}>
               <Button
                 variant="contained"
@@ -285,7 +279,7 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
                 onClick={handleSearchAll}
                 className={styles.searchAllButton}
               >
-                חפש הכל ({Math.min(20, uniqueSingleHistory.length)} ערכים אקראיים)
+                חפש הכל ({Math.min(20, allDrawerTerms.length)} ערכים אקראיים)
               </Button>
             </Box>
           )}
@@ -294,7 +288,13 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
 
           {/* List of all single history items */}
           <List className={styles.drawerList}>
-            {uniqueSingleHistory.length === 0 ? (
+            {isLoadingDrawerTerms ? (
+              <ListItem>
+                <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', py: 2 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              </ListItem>
+            ) : allDrawerTerms.length === 0 ? (
               <ListItem>
                 <ListItemText 
                   primary="אין היסטוריית חיפוש"
@@ -302,16 +302,27 @@ export default function SearchBox({ onSearch, onPlaylistSelect, initialValue }: 
                 />
               </ListItem>
             ) : (
-              uniqueSingleHistory.map((term, index) => (
-                <ListItem key={`drawer-term-${index}`} disablePadding>
-                  <ListItemButton onClick={() => handleDrawerTermClick(term)}>
-                    <ListItemText 
-                      primary={term}
-                      className={styles.drawerListItemText}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              ))
+              allDrawerTerms.map((term, index) => {
+                const currentTerms = query.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
+                const isSelected = currentTerms.includes(term.toLowerCase().trim());
+                return (
+                  <ListItem key={`drawer-term-${index}`} disablePadding>
+                    <ListItemButton onClick={() => handleDrawerTermClick(term)}>
+                      <Checkbox
+                        checked={isSelected}
+                        size="small"
+                        tabIndex={-1}
+                        disableRipple
+                        className={styles.drawerCheckbox}
+                      />
+                      <ListItemText 
+                        primary={term}
+                        className={styles.drawerListItemText}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })
             )}
           </List>
         </Box>
